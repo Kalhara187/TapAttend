@@ -63,9 +63,35 @@ SmartAttend is a full-stack employee attendance management system that uses QR c
 /server   → Node.js backend
 /database → SQL scripts
 
+Current scaffold in this workspace:
+
+* `/client/src/components/RoleBasedNavbar.jsx` → Role-based navbar UI
+* `/client/src/components/ProtectedRoute.jsx` → Route access guard by role
+* `/client/src/config/navigation.js` → Admin/Employee menu configuration
+* `/client/src/context/AuthContext.jsx` → Simple role auth state + theme toggle
+* `/client/src/index.css` → Tailwind CSS entry file
+
 ---
 
 ## ⚙️ Installation & Setup
+
+### Quick Start (Navbar Demo in this repo)
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+Demo behavior implemented:
+
+* Role-based navbar (Admin vs Employee)
+* Active page highlighting
+* Protected routes for unauthorized page blocking
+* Fixed top navbar + responsive hamburger menu
+* Profile dropdown with role badge and logout
+* Notification bell and dark/light mode toggle
+* Tailwind CSS utility-based styling
 
 ### 1️⃣ Clone the Repository
 
