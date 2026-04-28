@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+ import jwt from 'jsonwebtoken';
 import { createError } from './errorHandler.js';
 
 export const verifyToken = (req, res, next) => {
@@ -21,6 +21,22 @@ export const verifyToken = (req, res, next) => {
     if (error.name === 'TokenExpiredError') {
       return next(createError('Token expired', 401));
     }
+    next(error);
+  }
+};
+
+export const requireAdmin = (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw createError('Not authenticated', 401);
+    }
+
+    if (req.user.role !== 'admin') {
+      throw createError('Access denied. Admin privileges required.', 403);
+    }
+
+    next();
+  } catch (error) {
     next(error);
   }
 };
