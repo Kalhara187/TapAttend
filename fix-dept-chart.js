@@ -1,4 +1,6 @@
-import {
+const fs = require('fs');
+
+const content = `import {
   PieChart,
   Pie,
   Cell,
@@ -49,15 +51,12 @@ export default function DepartmentChart({ data }) {
               dataKey="value"
               stroke="none"
             >
-              {chartData.map((entry, index) => (
-                <Cell key={('cell-' + index)} fill={COLORS[index % COLORS.length]} />
+              {chartData.map((_, index) => (
+                <Cell key={\\`cell-\\${index}\\`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
             <Tooltip
-              formatter={(value, name) => {
-                const pct = ((value / total) * 100).toFixed(1);
-                return [(value + ' records (' + pct + '%)'), name];
-              }}
+              formatter={(value, name) => [\\`\\${value} records (\\${((value / total) * 100).toFixed(1)}%)\\`, name]}
               contentStyle={{
                 backgroundColor: '#fff',
                 border: '1px solid #e2e8f0',
@@ -76,6 +75,9 @@ export default function DepartmentChart({ data }) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-    </div>
   );
 }
+`;
+
+fs.writeFileSync('c:\\Users\\Dell\\Desktop\\dineli\\TapAttend\\client\\src\\components\\dashboard\\DepartmentChart.jsx', content, 'utf8');
+console.log('File written successfully');
