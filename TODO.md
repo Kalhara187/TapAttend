@@ -1,28 +1,26 @@
-# TODO: Modern Login/Register + Node.js JWT Backend
+# TODO: Admin Dashboard Implementation
 
 ## Backend
-- [x] Create `database/schema.sql` — users table
-- [x] Create `server/package.json` — dependencies
-- [x] Create `server/.env` — environment variables
-- [x] Create `server/config/db.js` — MySQL connection
-- [x] Create `server/controllers/authController.js` — register & login logic
-- [x] Create `server/routes/authRoutes.js` — auth endpoints
-- [x] Create `server/middleware/errorHandler.js` — error handling
-- [x] Create `server/middleware/authMiddleware.js` — JWT verification
-- [x] Create `server/server.js` — Express entry point
+- [ ] Update `database/schema.sql` — add attendance, departments tables + seed data
+- [ ] Update `server/middleware/authMiddleware.js` — add requireAdmin middleware
+- [ ] Create `server/controllers/adminController.js` — dashboard data endpoints
+- [ ] Create `server/routes/adminRoutes.js` — admin API routes
+- [ ] Update `server/server.js` — register admin routes
 
-## Frontend
-- [x] Update `client/package.json` — add axios
-- [x] Create `client/src/components/FormInput.jsx` — reusable input with icons & password toggle
-- [x] Create `client/src/pages/AuthPage.jsx` — modern split-screen login/register UI
-- [x] Update `client/src/context/AuthContext.jsx` — real JWT auth (login, logout, token refresh)
-- [x] Update `client/src/App.jsx` — integrate AuthPage & real auth flow
+## Frontend Dependencies
+- [ ] Install recharts and axios (`cd client && npm install recharts axios`)
 
-## Followup
-- [x] Install client dependencies (`cd client && npm install`)
-- [x] Install server dependencies (`cd server && npm install`)
-- [ ] Setup MySQL database & import schema (`database/schema.sql`)
-- [ ] Update `server/.env` with real DB credentials
-- [ ] Start backend (`cd server && npm run dev`)
-- [ ] Start frontend (`cd client && npm run dev`)
-- [ ] Test full register → login → redirect flow
+## Frontend Components
+- [ ] Create `client/src/services/api.js` — Axios instance with JWT interceptor
+- [ ] Create `client/src/components/dashboard/StatCard.jsx` — Statistic card component
+- [ ] Create `client/src/components/dashboard/SkeletonCard.jsx` — Loading skeleton
+- [ ] Create `client/src/components/dashboard/AttendanceTrendChart.jsx` — Line chart
+- [ ] Create `client/src/components/dashboard/MonthlySummaryChart.jsx` — Bar chart
+- [ ] Create `client/src/components/dashboard/DepartmentChart.jsx` — Pie chart
+- [ ] Create `client/src/pages/AdminDashboard.jsx` — Main dashboard page
+- [ ] Update `client/src/App.jsx` — use AdminDashboard for /admin/dashboard route
+
+## Testing
+- [ ] Restart backend and frontend
+- [ ] Login as admin and test dashboard
+
