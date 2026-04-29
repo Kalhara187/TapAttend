@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import api, { authApi } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -10,11 +11,12 @@ export function AuthProvider({ children }) {
   const [theme, setTheme] = useState('light');
   const [loading, setLoading] = useState(true);
 
-  // Load user from storage on mount
   useEffect(() => {
-    const storedToken =
-      localStorage.getItem('smartattend_token') ||
-      sessionStorage.getItem('smartattend_token');
+    const storedToken = localStorage.getItem('smartattend_token');
+    const storedTheme = localStorage.getItem('smartattend_theme') || 'light';
+
+    setTheme(storedTheme);
+    document.documentElement.classList.toggle('dark', storedTheme === 'dark');
 
     if (storedToken) {
       setToken(storedToken);
@@ -26,18 +28,14 @@ export function AuthProvider({ children }) {
 
   const fetchUser = async (authToken) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
+      const response = await api.get('/auth/me', {
+        headers: { Authorization: `Bearer ${authToken}` },
       });
-
-      const data = await response.json();
+      const data = response.data;
 
       if (data.success) {
         setUser(data.user);
       } else {
-        // Token invalid, clear storage
         logout();
       }
     } catch (error) {
@@ -51,17 +49,22 @@ export function AuthProvider({ children }) {
   const login = (userData, authToken) => {
     setUser(userData);
     setToken(authToken);
+    localStorage.setItem('smartattend_token', authToken);
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('smartattend_token');
-    sessionStorage.removeItem('smartattend_token');
   };
 
   const toggleTheme = () => {
-    setTheme((current) => (current === 'light' ? 'dark' : 'light'));
+    setTheme((current) => {
+      const next = current === 'light' ? 'dark' : 'light';
+      localStorage.setItem('smartattend_theme', next);
+      document.documentElement.classList.toggle('dark', next === 'dark');
+      return next;
+    });
   };
 
   const value = useMemo(

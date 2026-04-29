@@ -1,21 +1,19 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import RoleBasedNavbar from './components/RoleBasedNavbar';
 import ProtectedRoute from './components/ProtectedRoute';
-import AuthPage from './pages/AuthPage';
 import { useAuth } from './context/AuthContext';
-import { ADMIN_MENU, EMPLOYEE_MENU } from './config/navigation';
-
-function Page({ title, details }) {
-  return (
-    <section className="mx-auto w-full max-w-5xl rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-900/5">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-teal-700">
-        SmartAttend
-      </p>
-      <h1 className="mb-2 text-3xl font-bold text-slate-900">{title}</h1>
-      <p className="text-slate-600">{details}</p>
-    </section>
-  );
-}
+import AppShell from './components/layout/AppShell';
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+import DashboardPage from './pages/admin/DashboardPage';
+import EmployeeManagementPage from './pages/admin/EmployeeManagementPage';
+import AttendancePage from './pages/admin/AttendancePage';
+import ReportsPage from './pages/admin/ReportsPage';
+import QrGeneratorPage from './pages/admin/QrGeneratorPage';
+import LeaveManagementPage from './pages/admin/LeaveManagementPage';
+import ScannerPage from './pages/employee/ScannerPage';
+import AttendanceHistoryPage from './pages/employee/AttendanceHistoryPage';
+import ProfilePage from './pages/employee/ProfilePage';
+import EmployeeLeavePage from './pages/employee/LeavePage';
 
 export default function App() {
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -29,153 +27,116 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_90%_10%,rgba(249,115,22,0.12),transparent_40%),radial-gradient(circle_at_10%_20%,rgba(15,118,110,0.18),transparent_36%),#f7faf9]">
-      {isAuthenticated && <RoleBasedNavbar />}
-      <main className={`px-4 pb-7 ${isAuthenticated ? 'pt-28 md:px-6' : ''}`}>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              isAuthenticated ? (
-                <Navigate to="/home" replace />
-              ) : (
-                <AuthPage />
-              )
-            }
-          />
+    <Routes>
+      <Route
+        path="/"
+        element={isAuthenticated ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />}
+      />
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/home" replace /> : <LoginPage />} />
+      <Route path="/register" element={isAuthenticated ? <Navigate to="/home" replace /> : <RegisterPage />} />
 
-          <Route
-            path="/home"
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'employee']}>
-                <Navigate
-                  to={
-                    user?.role === 'admin'
-                      ? ADMIN_MENU[0].path
-                      : EMPLOYEE_MENU[0].path
-                  }
-                  replace
-                />
-              </ProtectedRoute>
-            }
-          />
+      <Route
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'employee']}>
+            <AppShell />
+          </ProtectedRoute>
+        }
+      >
+        <Route
+          path="/home"
+          element={
+            <Navigate
+              to={user?.role === 'admin' ? '/admin/dashboard' : '/employee/scan-qr'}
+              replace
+            />
+          }
+        />
 
-          <Route
-            path="/admin/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Page
-                  title="Admin Dashboard"
-                  details="Track live attendance, late arrivals, and company-level KPIs."
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/employees"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Page
-                  title="Employee Management"
-                  details="Add, edit, and organize employee records by department and status."
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/attendance"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Page
-                  title="Company Attendance"
-                  details="Review attendance logs for all teams with advanced filters."
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/reports"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Page
-                  title="Attendance Reports"
-                  details="Generate daily and monthly reports for payroll and compliance."
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/qr-generator"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Page
-                  title="QR Generator"
-                  details="Create time-bound QR codes for secure attendance check-ins."
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/leaves"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Page
-                  title="Leave Requests"
-                  details="Approve, reject, and audit employee leave applications."
-                />
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/employees"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <EmployeeManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/attendance"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AttendancePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/reports"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ReportsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/qr-generator"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <QrGeneratorPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/leaves"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <LeaveManagementPage />
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/employee/scan-qr"
-            element={
-              <ProtectedRoute allowedRoles={['employee']}>
-                <Page
-                  title="Scan QR"
-                  details="Scan today's dynamic QR to mark your arrival or departure."
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/employee/my-attendance"
-            element={
-              <ProtectedRoute allowedRoles={['employee']}>
-                <Page
-                  title="My Attendance"
-                  details="Check your own attendance history with worked-hour summaries."
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/employee/profile"
-            element={
-              <ProtectedRoute allowedRoles={['employee']}>
-                <Page
-                  title="My Profile"
-                  details="Update contact information and personal details securely."
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/employee/apply-leave"
-            element={
-              <ProtectedRoute allowedRoles={['employee']}>
-                <Page
-                  title="Apply Leave"
-                  details="Submit leave requests and monitor approval status."
-                />
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/employee/scan-qr"
+          element={
+            <ProtectedRoute allowedRoles={['employee']}>
+              <ScannerPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/my-attendance"
+          element={
+            <ProtectedRoute allowedRoles={['employee']}>
+              <AttendanceHistoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/profile"
+          element={
+            <ProtectedRoute allowedRoles={['employee']}>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee/apply-leave"
+          element={
+            <ProtectedRoute allowedRoles={['employee']}>
+              <EmployeeLeavePage />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-    </div>
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   );
 }
 

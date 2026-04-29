@@ -117,3 +117,4 @@ export default function AttendanceTrendChart({ data, loading }) {
       </div>
     </div>
   );
+}

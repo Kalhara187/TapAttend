@@ -32,3 +32,8 @@ export const EMPLOYEE_MENU = [
   { label: "Profile", path: "/employee/profile", icon: HiOutlineUserCircle },
   { label: "Apply Leave", path: "/employee/apply-leave", icon: HiOutlineCalendarDays },
 ];
+
+export const PUBLIC_MENU = [
+  { label: 'Login', path: '/login' },
+  { label: 'Register', path: '/register' },
+];
