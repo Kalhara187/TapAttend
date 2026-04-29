@@ -1,5 +1,30 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+	--app-bg: #f5f7fb;
+	--app-text: #0f172a;
+	--surface-bg: rgba(255, 255, 255, 0.8);
+	--surface-border: rgba(255, 255, 255, 0.3);
+	--surface-shadow: 0 20px 35px -18px rgba(15, 23, 42, 0.18);
+	--page-grad-1: rgba(20, 184, 166, 0.14);
+	--page-grad-2: rgba(59, 130, 246, 0.12);
+	--page-grad-bottom-1: #f8fafc;
+	--page-grad-bottom-2: #f5f7fb;
+}
+
+.dark {
+	--app-bg: #020617;
+	--app-text: #e2e8f0;
+	--surface-bg: rgba(15, 23, 42, 0.78);
+	--surface-border: rgba(148, 163, 184, 0.18);
+	--surface-shadow: 0 24px 40px -22px rgba(2, 6, 23, 0.9);
+	--page-grad-1: rgba(20, 184, 166, 0.2);
+	--page-grad-2: rgba(59, 130, 246, 0.16);
+	--page-grad-bottom-1: #020617;
+	--page-grad-bottom-2: #0f172a;
+}
 
 @layer base {
 	html,
@@ -10,8 +35,8 @@
 
 	body {
 		font-family: 'Manrope', sans-serif;
-		background: #f5f7fb;
-		color: #0f172a;
+		background: var(--app-bg);
+		color: var(--app-text);
 	}
 
 	::selection {
@@ -29,19 +54,65 @@
 
 @layer utilities {
 	.glass-card {
-		@apply border border-white/30 bg-white/80 shadow-xl shadow-slate-900/5 backdrop-blur-xl;
+		border: 1px solid var(--surface-border);
+		background: var(--surface-bg);
+		box-shadow: var(--surface-shadow);
+		backdrop-filter: blur(20px);
 	}
 
 	.page-surface {
 		background:
-			radial-gradient(circle at 88% 8%, rgba(20, 184, 166, 0.14), transparent 30%),
-			radial-gradient(circle at 12% 16%, rgba(59, 130, 246, 0.12), transparent 26%),
-			linear-gradient(180deg, #f8fafc 0%, #f5f7fb 100%);
+			radial-gradient(circle at 88% 8%, var(--page-grad-1), transparent 30%),
+			radial-gradient(circle at 12% 16%, var(--page-grad-2), transparent 26%),
+			linear-gradient(180deg, var(--page-grad-bottom-1) 0%, var(--page-grad-bottom-2) 100%);
 	}
 
 	.grid-fine {
 		background-image: linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
 			linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
 		background-size: 24px 24px;
+	}
+}
+
+@layer components {
+	.dark .bg-white {
+		background-color: rgb(15 23 42 / 0.9) !important;
+	}
+
+	.dark .bg-slate-50 {
+		background-color: rgb(30 41 59 / 0.88) !important;
+	}
+
+	.dark .bg-slate-100 {
+		background-color: rgb(51 65 85 / 0.92) !important;
+	}
+
+	.dark .text-slate-900 {
+		color: rgb(226 232 240) !important;
+	}
+
+	.dark .text-slate-700 {
+		color: rgb(203 213 225) !important;
+	}
+
+	.dark .text-slate-600,
+	.dark .text-slate-500,
+	.dark .text-slate-400 {
+		color: rgb(148 163 184) !important;
+	}
+
+	.dark .border-slate-200,
+	.dark .border-slate-200\/70,
+	.dark .divide-slate-200,
+	.dark .divide-slate-100 {
+		border-color: rgb(71 85 105 / 0.7) !important;
+	}
+
+	.dark .from-slate-900 {
+		--tw-gradient-from: rgb(15 23 42) var(--tw-gradient-from-position);
+	}
+
+	.dark .to-slate-800 {
+		--tw-gradient-to: rgb(30 41 59) var(--tw-gradient-to-position);
 	}
 }
