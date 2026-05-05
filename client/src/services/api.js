@@ -66,7 +66,9 @@ export const leaveApi = {
 };
 
 export const qrApi = {
+  generate: (payload) => api.post('/qr/generate', payload),
   create: (payload) => api.post('/qr/generate', payload),
+  history: () => api.get('/qr/history'),
 };
 
 export default api;

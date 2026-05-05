@@ -28,25 +28,42 @@ CREATE TABLE IF NOT EXISTS departments (
 CREATE TABLE IF NOT EXISTS attendance (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
+  employee_id VARCHAR(50) NOT NULL,
   date DATE NOT NULL,
+  attendance_date DATE NOT NULL,
   check_in TIME,
+  check_in_time TIME,
   check_out TIME,
+  check_out_time TIME,
   status ENUM('present', 'absent', 'late', 'half_day') NOT NULL DEFAULT 'absent',
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE KEY unique_user_date (user_id, date)
+  UNIQUE KEY unique_user_date (user_id, date),
+  UNIQUE KEY unique_employee_date (employee_id, attendance_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- QR Codes table
 CREATE TABLE IF NOT EXISTS qr_codes (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  employee_id VARCHAR(50) NOT NULL,
+  employee_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  department VARCHAR(150) NOT NULL,
+  location VARCHAR(255) NOT NULL,
+  role VARCHAR(50) NOT NULL,
+  attendance_type ENUM('Check-In', 'Check-Out') NOT NULL DEFAULT 'Check-In',
   code VARCHAR(255) NOT NULL UNIQUE,
-  expires_at TIMESTAMP NOT NULL,
+  qr_data LONGTEXT NOT NULL,
+  status ENUM('active', 'expired', 'revoked') NOT NULL DEFAULT 'active',
+  generated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at DATETIME NOT NULL,
   created_by INT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_qr_employee ON qr_codes (employee_id, attendance_type, status, expires_at);
 
 -- Leaves table
 CREATE TABLE IF NOT EXISTS leaves (
