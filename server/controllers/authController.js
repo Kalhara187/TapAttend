@@ -3,8 +3,10 @@ import jwt from 'jsonwebtoken';
 import pool from '../config/db.js';
 import { createError } from '../middleware/errorHandler.js';
 
+const JWT_SECRET = process.env.JWT_SECRET || 'smartattend-dev-secret';
+
 const generateToken = (payload) => {
-  return jwt.sign(payload, process.env.JWT_SECRET, {
+  return jwt.sign(payload, JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '1d',
   });
 };

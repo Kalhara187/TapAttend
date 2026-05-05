@@ -1,12 +1,19 @@
 import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const ADMIN_HASH = '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG';
+const DB_HOST = process.env.DB_HOST || 'localhost';
+const DB_USER = process.env.DB_USER || 'root';
+const DB_PASSWORD = process.env.DB_PASSWORD || '';
+const DB_NAME = process.env.DB_NAME || 'smartattend';
 
 async function main() {
   const root = await mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
+    host: DB_HOST,
+    user: DB_USER,
+    password: DB_PASSWORD,
   });
 
   await root.query(
@@ -15,10 +22,10 @@ async function main() {
   await root.end();
 
   const db = await mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'smartattend',
+    host: DB_HOST,
+    user: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_NAME,
   });
 
   await db.query(
