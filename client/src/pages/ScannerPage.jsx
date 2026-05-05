@@ -8,6 +8,14 @@ function formatTime(date) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
+function parseQrPayload(decodedText) {
+  try {
+    return JSON.parse(decodedText);
+  } catch {
+    return null;
+  }
+}
+
 export default function ScannerPage() {
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -109,6 +117,8 @@ export default function ScannerPage() {
     if (!result) return;
     const data = typeof result === 'string' ? result : result?.text || null;
     if (!data) return;
+    const parsedQr = parseQrPayload(data);
+    const scannedEmployeeId = parsedQr?.employeeId || user?.employeeId || user?.id || '';
 
     if (cooldown) return; // prevent duplicate rapid scans
 
@@ -129,7 +139,7 @@ export default function ScannerPage() {
 
     try {
       const payload = {
-        employeeId: user?.id || user?.employeeId || user?._id,
+        employeeId: scannedEmployeeId,
         qrData: data,
         timestamp: new Date().toISOString(),
       };

@@ -8,6 +8,14 @@ function formatClock(date) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
+function parseQrPayload(decodedText) {
+  try {
+    return JSON.parse(decodedText);
+  } catch {
+    return null;
+  }
+}
+
 export default function ScannerPage() {
   const { user } = useAuth();
   const [status, setStatus] = useState('Ready to scan');
@@ -80,6 +88,8 @@ export default function ScannerPage() {
 
   const handleScan = async (decodedText) => {
     if (!decodedText || isBusy || duplicateLock) return;
+    const parsedQr = parseQrPayload(decodedText);
+    const scannedEmployeeId = parsedQr?.employeeId || user?.employeeId || user?.id || '';
     setDuplicateLock(true);
     lockRef.current = setTimeout(() => setDuplicateLock(false), 4000);
     setIsBusy(true);
@@ -89,7 +99,7 @@ export default function ScannerPage() {
 
     try {
       const response = await attendanceApi.scan({
-        employeeId: user?.id || user?.employeeId || user?._id,
+        employeeId: scannedEmployeeId,
         qrData: decodedText,
         currentTime: new Date().toISOString(),
       });
