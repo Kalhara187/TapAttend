@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QR Attendance Scan</title>
+  <style>
+    :root{--bg:#0f172a;--card:#0b1220;--accent:#06b6d4;--success:#22c55e;--danger:#ef4444;color-scheme:dark}
+    body{margin:0;background:linear-gradient(180deg,#071029 0%, #081124 100%);font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial}
+    .container{max-width:980px;margin:32px auto;padding:20px;color:#e6eef6}
+    .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.03);border-radius:12px;padding:18px}
+    .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .title{font-size:20px;font-weight:600}
+    .clock{font-size:14px;opacity:0.8}
+    #reader{width:100%;height:420px;border-radius:10px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .btn{background:var(--accent);color:#042027;padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:inherit}
+    .input{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    .row{display:grid;grid-template-columns:1fr 320px;gap:12px}
+    .alerts{margin-top:12px}
+    .alert{padding:10px;border-radius:8px;margin-bottom:8px}
+    .alert.success{background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.16)}
+    .alert.error{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.12)}
+    .meta{font-size:13px;color:#bcd3df}
+    @media(max-width:880px){.row{grid-template-columns:1fr;}.header{flex-direction:column;align-items:flex-start;gap:8px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div>
+          <div class="title">QR Attendance Scan</div>
+          <div class="meta">Fast, mobile-friendly scanner for employees</div>
+        </div>
+        <div class="clock" id="liveClock">--:--:--</div>
+      </div>
+
+      <div class="row">
+        <div>
+          <div id="reader">Camera loading…</div>
+          <div class="controls">
+            <button id="startBtn" class="btn">Start Camera</button>
+            <button id="stopBtn" class="btn secondary">Stop</button>
+            <button id="toggleTorch" class="btn secondary">Toggle Torch</button>
+          </div>
+          <div class="alerts" id="alerts"></div>
+        </div>
+
+        <div>
+          <div class="card" style="padding:12px">
+            <div style="margin-bottom:8px"><strong>Authorization</strong></div>
+            <div style="margin-bottom:8px"><input id="tokenInput" class="input" placeholder="Paste JWT token here (required)" /></div>
+            <div style="margin-bottom:8px"><button id="clearToken" class="btn secondary">Clear Token</button></div>
+            <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0" />
+            <div style="margin-bottom:8px"><strong>Last Scan</strong></div>
+            <pre id="lastScan" style="white-space:pre-wrap;font-size:13px;color:#cfe9f5;height:220px;overflow:auto">No scans yet.</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+  <script>
+    const reader = document.getElementById('reader');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const toggleTorch = document.getElementById('toggleTorch');
+    const alerts = document.getElementById('alerts');
+    const tokenInput = document.getElementById('tokenInput');
+    const clearToken = document.getElementById('clearToken');
+    const lastScan = document.getElementById('lastScan');
+
+    let html5QrScanner = null;
+    let currentCameraId = null;
+    let torchOn = false;
+
+    function showAlert(message, type='success'){
+      const el = document.createElement('div');
+      el.className = 'alert ' + (type==='success' ? 'success' : 'error');
+      el.textContent = message;
+      alerts.prepend(el);
+      setTimeout(()=> el.remove(), 6000);
+    }
+
+    function updateLastScan(text){ lastScan.textContent = text; }
+
+    function onScanSuccess(decodedText, decodedResult){
+      try{
+        const parsed = JSON.parse(decodedText);
+        updateLastScan(JSON.stringify(parsed, null, 2));
+      }catch(e){
+        updateLastScan(decodedText);
+      }
+
+      const token = tokenInput.value.trim();
+      if(!token){
+        showAlert('Missing JWT token. Paste it in the Authorization box.', 'error');
+        return;
+      }
+
+      const payload = { qrData: decodedText };
+      // Try extract employeeId if available
+      try{ const p = JSON.parse(decodedText); if(p.employeeId) payload.employeeId = p.employeeId; }catch(e){}
+
+      axios.post('/api/attendance/scan', payload, { headers: { Authorization: 'Bearer ' + token } })
+        .then(res => {
+          showAlert(res.data?.message || 'Attendance recorded', 'success');
+        })
+        .catch(err => {
+          const msg = err?.response?.data?.message || err.message || 'Scan failed';
+          showAlert(msg, 'error');
+        });
+    }
+
+    function onScanFailure(error){ /* ignore transient failures */ }
+
+    async function startCamera(){
+      if(html5QrScanner) return;
+      const config = { fps: 10, qrbox: {width: 300, height: 300} };
+      html5QrScanner = new Html5Qrcode(/* element id */ 'reader');
+      try{
+        const devices = await Html5Qrcode.getCameras();
+        if(devices && devices.length){
+          currentCameraId = devices[0].id;
+          await html5QrScanner.start(currentCameraId, { fps: 10, qrbox: 250 }, onScanSuccess, onScanFailure);
+          showAlert('Camera started', 'success');
+        } else {
+          reader.textContent = 'No camera found';
+        }
+      }catch(err){
+        showAlert('Camera start error: ' + err.message, 'error');
+      }
+    }
+
+    async function stopCamera(){
+      if(!html5QrScanner) return;
+      try{
+        await html5QrScanner.stop();
+        await html5QrScanner.clear();
+        html5QrScanner = null;
+        showAlert('Camera stopped', 'success');
+      }catch(err){ showAlert('Stop error: '+err.message, 'error'); }
+    }
+
+    // Torch toggle (best-effort)
+    async function toggleCameraTorch(){
+      if(!html5QrScanner || !currentCameraId){ showAlert('Camera not started', 'error'); return; }
+      try{
+        // Html5Qrcode exposes getRunningTrack
+        const track = html5QrScanner._oStreamingMediaTrack; // best-effort access
+        if(!track) return showAlert('Torch not available', 'error');
+        const imageCapture = new ImageCapture(track);
+        const capabilities = await imageCapture.getPhotoCapabilities();
+        if(!capabilities.torch) return showAlert('Torch not supported', 'error');
+        torchOn = !torchOn;
+        await track.applyConstraints({ advanced: [{ torch: torchOn }] });
+        showAlert('Torch ' + (torchOn ? 'on' : 'off'), 'success');
+      }catch(err){ showAlert('Torch toggle failed', 'error'); }
+    }
+
+    startBtn.addEventListener('click', startCamera);
+    stopBtn.addEventListener('click', stopCamera);
+    toggleTorch.addEventListener('click', toggleCameraTorch);
+    clearToken.addEventListener('click', ()=> tokenInput.value = '');
+
+    // Live clock
+    function updateClock(){ document.getElementById('liveClock').textContent = new Date().toLocaleString(); }
+    updateClock(); setInterval(updateClock, 1000);
+  </script>
+</body>
+</html>
