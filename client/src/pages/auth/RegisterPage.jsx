@@ -1,26 +1,20 @@
-import { Link } from 'react-router-dom';
 import AuthShell from '../../components/auth/AuthShell';
-import AuthForm from '../../components/auth/AuthForm';
 
 export default function RegisterPage() {
   return (
     <AuthShell
-      eyebrow="Get started"
-      title="Create a SmartAttend account"
-      subtitle="Register employees or administrators with role-based onboarding."
+      eyebrow="Admin controlled"
+      title="Employee accounts are created by admins"
+      subtitle="SmartAttend uses admin-managed onboarding for employee access."
       points={[
-        'Assign department, role, and secure credentials in one workflow.',
-        'Validation, matching passwords, and production-ready form states are included.',
-        'Built to feel like a real SaaS HR admin panel instead of a simple demo form.',
+        'Use the Employee Management page to create usernames, passwords, and QR codes.',
+        'Employees can then log in with the credentials provided by admin.',
+        'This keeps account creation centralized and secure.',
       ]}
     >
-      <AuthForm mode="register" />
-      <p className="mt-5 text-center text-sm text-slate-500">
-        Already have access?{' '}
-        <Link to="/login" className="font-semibold text-teal-700 hover:text-teal-600">
-          Back to login
-        </Link>
-      </p>
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-5 text-sm text-slate-600">
+        Accounts are provisioned by the admin panel. Please sign in with your assigned username and password.
+      </div>
     </AuthShell>
   );
 }

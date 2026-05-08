@@ -40,12 +40,15 @@ export const authApi = {
   login: (payload) => api.post('/auth/login', payload),
   register: (payload) => api.post('/auth/register', payload),
   me: () => api.get('/auth/me'),
+  updateMe: (payload) => api.patch('/auth/me', payload),
 };
 
 export const adminApi = {
   getSummary: () => api.get('/admin/summary'),
   getAttendanceTrends: (range = 30) => api.get(`/admin/attendance-trends?range=${range}`),
   getEmployees: () => api.get('/admin/employees'),
+  getAttendanceRecords: (params = {}) => api.get('/admin/attendance-records', { params }),
+  createEmployee: (payload) => api.post('/admin/employees', payload),
 };
 
 export const attendanceApi = {

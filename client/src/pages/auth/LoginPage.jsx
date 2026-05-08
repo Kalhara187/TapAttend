@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import AuthShell from '../../components/auth/AuthShell';
 import AuthForm from '../../components/auth/AuthForm';
 
@@ -16,10 +15,7 @@ export default function LoginPage() {
     >
       <AuthForm mode="login" />
       <p className="mt-5 text-center text-sm text-slate-500">
-        New to SmartAttend?{' '}
-        <Link to="/register" className="font-semibold text-teal-700 hover:text-teal-600">
-          Create an account
-        </Link>
+        Employee accounts are created by admins from the Employee Management page.
       </p>
     </AuthShell>
   );

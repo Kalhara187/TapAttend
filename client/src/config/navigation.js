@@ -5,7 +5,6 @@ import {
   HiOutlineDocumentChartBar,
   HiOutlineQrCode,
   HiOutlineCalendarDays,
-  HiOutlineCamera,
   HiOutlineUserCircle,
 } from "react-icons/hi2";
 
@@ -23,7 +22,6 @@ export const ADMIN_MENU = [
 ];
 
 export const EMPLOYEE_MENU = [
-  { label: "Scan QR", path: "/employee/scan-qr", icon: HiOutlineCamera },
   {
     label: "My Attendance",
     path: "/employee/my-attendance",

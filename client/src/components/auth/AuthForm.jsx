@@ -31,8 +31,8 @@ export default function AuthForm({ mode = 'login' }) {
     const nextErrors = {};
 
     if (!isLogin && !formData.name.trim()) nextErrors.name = 'Full name is required';
-    if (!formData.email.trim()) nextErrors.email = 'Email is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) nextErrors.email = 'Enter a valid email';
+    if (!formData.email.trim()) nextErrors.email = 'Username or email is required';
+    else if (formData.email.includes('@') && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) nextErrors.email = 'Enter a valid email';
     if (!formData.password.trim()) nextErrors.password = 'Password is required';
     else if (formData.password.length < 6) nextErrors.password = 'Use at least 6 characters';
     if (!isLogin && formData.password !== formData.confirmPassword) nextErrors.confirmPassword = 'Passwords do not match';
@@ -76,7 +76,7 @@ export default function AuthForm({ mode = 'login' }) {
       localStorage.setItem('smartattend_token', data.token);
       login(data.user, data.token);
 
-      navigate(data.user.role === 'admin' ? '/admin/dashboard' : '/employee/scan-qr', {
+      navigate(data.user.role === 'admin' ? '/admin/dashboard' : '/employee/my-attendance', {
         replace: true,
       });
     } catch (authError) {
@@ -109,15 +109,15 @@ export default function AuthForm({ mode = 'login' }) {
 
       <FormInput
         id="email"
-        label="Email"
-        type="email"
-        placeholder="you@company.com"
+        label="Username or Email"
+        type="text"
+        placeholder="username or you@company.com"
         value={formData.email}
         onChange={handleChange}
         error={errors.email}
         icon={HiEnvelope}
         required
-        autoComplete="email"
+        autoComplete="username"
       />
 
       {!isLogin && (

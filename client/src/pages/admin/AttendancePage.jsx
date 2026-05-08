@@ -1,33 +1,60 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { HiArrowDownTray } from 'react-icons/hi2';
-import { mockAttendanceRecords } from '../../data/mockData';
+import { adminApi } from '../../services/api';
 
 const badgeStyles = {
-  Present: 'bg-emerald-50 text-emerald-700',
-  Late: 'bg-amber-50 text-amber-700',
-  Absent: 'bg-rose-50 text-rose-700',
+  present: 'bg-emerald-50 text-emerald-700',
+  late: 'bg-amber-50 text-amber-700',
+  absent: 'bg-rose-50 text-rose-700',
+  half_day: 'bg-sky-50 text-sky-700',
 };
 
-export default function AttendancePage() {
-  const [date, setDate] = useState('2026-04-29');
-  const [employee, setEmployee] = useState('All');
-  const [department, setDepartment] = useState('All');
+function formatTime(value) {
+  if (!value) return '-';
+  return value.slice(0, 5);
+}
 
-  const filtered = useMemo(
-    () =>
-      mockAttendanceRecords.filter((item) => {
-        const matchesDate = !date || item.date === date;
-        const matchesEmployee = employee === 'All' || item.employeeId === employee;
-        const matchesDepartment = department === 'All' || item.department === department;
-        return matchesDate && matchesEmployee && matchesDepartment;
-      }),
-    [date, employee, department]
+export default function AttendancePage() {
+  const [rows, setRows] = useState([]);
+  const [date, setDate] = useState('');
+  const [employee, setEmployee] = useState('All');
+
+  useEffect(() => {
+    let mounted = true;
+
+    const load = async () => {
+      try {
+        const response = await adminApi.getAttendanceRecords({
+          date: date || undefined,
+          employeeId: employee === 'All' ? undefined : employee,
+        });
+
+        if (mounted) {
+          setRows(response.data?.data || []);
+        }
+      } catch {
+        if (mounted) setRows([]);
+      }
+    };
+
+    load();
+    const intervalId = setInterval(load, 15000);
+
+    return () => {
+      mounted = false;
+      clearInterval(intervalId);
+    };
+  }, [date, employee]);
+
+  const employeeIds = useMemo(
+    () => Array.from(new Set(rows.map((item) => item.employeeId).filter(Boolean))),
+    [rows]
   );
 
   const exportCsv = () => {
-    const header = ['Employee ID', 'Name', 'Department', 'Date', 'Status', 'Check-In', 'Check-Out'];
-    const rows = filtered.map((item) => [item.employeeId, item.name, item.department, item.date, item.status, item.checkIn, item.checkOut]);
-    const csv = [header, ...rows].map((row) => row.join(',')).join('\n');
+    const header = ['Employee ID', 'Name', 'Date', 'Status', 'Check-In', 'Check-Out'];
+    const csvRows = rows.map((item) => [item.employeeId, item.name, item.date, item.status, formatTime(item.checkIn), formatTime(item.checkOut)]);
+    const csv = [header, ...csvRows].map((row) => row.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -54,12 +81,9 @@ export default function AttendancePage() {
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3" />
           <select value={employee} onChange={(e) => setEmployee(e.target.value)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
             <option>All</option>
-            {mockAttendanceRecords.map((item) => <option key={item.employeeId} value={item.employeeId}>{item.employeeId}</option>)}
+            {employeeIds.map((item) => <option key={item} value={item}>{item}</option>)}
           </select>
-          <select value={department} onChange={(e) => setDepartment(e.target.value)} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-            <option>All</option>
-            {Array.from(new Set(mockAttendanceRecords.map((item) => item.department))).map((item) => <option key={item}>{item}</option>)}
-          </select>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">Updates every 15 seconds</div>
         </div>
       </div>
 
@@ -67,23 +91,28 @@ export default function AttendancePage() {
         <table className="min-w-full divide-y divide-slate-200 text-left">
           <thead className="bg-slate-50 text-xs uppercase tracking-[0.2em] text-slate-500">
             <tr>
-              {['Employee', 'Department', 'Date', 'Status', 'Check In', 'Check Out'].map((item) => <th key={item} className="px-5 py-4 font-semibold">{item}</th>)}
+              {['Employee', 'Role', 'Date', 'Status', 'Check In', 'Check Out'].map((item) => <th key={item} className="px-5 py-4 font-semibold">{item}</th>)}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filtered.map((item) => (
+            {rows.map((item) => (
               <tr key={item.id} className="hover:bg-slate-50/70">
                 <td className="px-5 py-4">
                   <p className="font-semibold text-slate-900">{item.name}</p>
                   <p className="text-xs text-slate-500">{item.employeeId}</p>
                 </td>
-                <td className="px-5 py-4 text-sm text-slate-600">{item.department}</td>
+                <td className="px-5 py-4 text-sm text-slate-600">{item.role}</td>
                 <td className="px-5 py-4 text-sm text-slate-600">{item.date}</td>
-                <td className="px-5 py-4"><span className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeStyles[item.status] || badgeStyles.Present}`}>{item.status}</span></td>
-                <td className="px-5 py-4 text-sm text-slate-600">{item.checkIn}</td>
-                <td className="px-5 py-4 text-sm text-slate-600">{item.checkOut}</td>
+                <td className="px-5 py-4"><span className={`rounded-full px-3 py-1 text-xs font-semibold ${badgeStyles[item.status] || badgeStyles.present}`}>{item.status}</span></td>
+                <td className="px-5 py-4 text-sm text-slate-600">{formatTime(item.checkIn)}</td>
+                <td className="px-5 py-4 text-sm text-slate-600">{formatTime(item.checkOut)}</td>
               </tr>
             ))}
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-5 py-6 text-sm text-slate-500">No attendance records found.</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

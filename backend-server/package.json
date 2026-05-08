@@ -1,7 +1,7 @@
 {
-  "name": "smartattend-backend-server",
+  "name": "smartattend-server",
   "version": "1.0.0",
-  "description": "SmartAttend Node.js backend API server",
+  "description": "SmartAttend Node.js backend with JWT authentication",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -21,3 +21,4 @@
     "nodemon": "^3.1.9"
   }
 }
+

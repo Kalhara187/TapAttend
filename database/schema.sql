@@ -10,10 +10,15 @@ USE smartattend;
 -- Users table for authentication
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(100) NOT NULL UNIQUE,
+  employee_id VARCHAR(50),
   name VARCHAR(255) NOT NULL,
   email VARCHAR(255) NOT NULL UNIQUE,
+  department VARCHAR(150) NOT NULL DEFAULT 'Operations',
   password VARCHAR(255) NOT NULL,
   role ENUM('admin', 'employee') NOT NULL DEFAULT 'employee',
+  account_status ENUM('Active', 'Inactive', 'On Leave') NOT NULL DEFAULT 'Active',
+  qr_token VARCHAR(255) UNIQUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -87,22 +92,21 @@ INSERT IGNORE INTO departments (name) VALUES
   ('Operations');
 
 -- Seed demo admin user (password: admin123)
-INSERT IGNORE INTO users (id, name, email, password, role) VALUES
-  (1, 'Admin User', 'admin@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'admin');
+INSERT IGNORE INTO users (id, username, name, email, password, role) VALUES
+  (1, 'admin', 'Admin User', 'admin@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'admin');
 
--- Seed demo employees (password: employee123)
-INSERT IGNORE INTO users (id, name, email, password, role) VALUES
-  (2, 'John Doe', 'john@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (3, 'Jane Smith', 'jane@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (4, 'Bob Johnson', 'bob@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (5, 'Alice Brown', 'alice@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (6, 'Charlie Davis', 'charlie@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (7, 'Diana Evans', 'diana@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (8, 'Eve Foster', 'eve@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (9, 'Frank Green', 'frank@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (10, 'Grace Hill', 'grace@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (11, 'Henry Irving', 'henry@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (12, 'Ivy Jones', 'ivy@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee');
+INSERT IGNORE INTO users (id, username, name, email, password, role) VALUES
+  (2, 'john', 'John Doe', 'john@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
+  (3, 'jane', 'Jane Smith', 'jane@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
+  (4, 'bob', 'Bob Johnson', 'bob@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
+  (5, 'alice', 'Alice Brown', 'alice@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
+  (6, 'charlie', 'Charlie Davis', 'charlie@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
+  (7, 'diana', 'Diana Evans', 'diana@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
+  (8, 'eve', 'Eve Foster', 'eve@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
+  (9, 'frank', 'Frank Green', 'frank@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
+  (10, 'grace', 'Grace Hill', 'grace@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
+  (11, 'henry', 'Henry Irving', 'henry@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
+  (12, 'ivy', 'Ivy Jones', 'ivy@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee');
 
 -- Seed demo attendance data (last 30 days)
 -- This creates realistic attendance patterns for demo purposes

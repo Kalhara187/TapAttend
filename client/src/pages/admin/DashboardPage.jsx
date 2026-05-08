@@ -17,6 +17,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(mockSummary);
   const [trendData, setTrendData] = useState(mockAttendanceTrends);
+  const [monthlyData, setMonthlyData] = useState(mockMonthlyAttendance);
+  const [departmentData, setDepartmentData] = useState(mockDepartmentBreakdown);
 
   useEffect(() => {
     let mounted = true;
@@ -31,11 +33,20 @@ export default function DashboardPage() {
         if (!mounted) return;
 
         if (summaryResponse.status === 'fulfilled' && summaryResponse.value.data?.success) {
-          setSummary(summaryResponse.value.data.summary || mockSummary);
+          const summaryData = summaryResponse.value.data.data;
+          setSummary({
+            totalEmployees: summaryData?.totalEmployees ?? mockSummary.totalEmployees,
+            presentToday: summaryData?.presentToday ?? mockSummary.presentToday,
+            lateEmployees: summaryData?.lateToday ?? mockSummary.lateEmployees,
+            absentEmployees: summaryData?.absentToday ?? mockSummary.absentEmployees,
+          });
         }
 
         if (trendsResponse.status === 'fulfilled' && trendsResponse.value.data?.success) {
-          setTrendData(trendsResponse.value.data.trends || mockAttendanceTrends);
+          const trendPayload = trendsResponse.value.data.data;
+          setTrendData(trendPayload?.dailyTrends || mockAttendanceTrends);
+          setMonthlyData(trendPayload?.monthlySummary || mockMonthlyAttendance);
+          setDepartmentData(trendPayload?.departmentData || mockDepartmentBreakdown);
         }
       } finally {
         if (mounted) setLoading(false);
@@ -43,8 +54,10 @@ export default function DashboardPage() {
     };
 
     load();
+    const intervalId = setInterval(load, 15000);
     return () => {
       mounted = false;
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -98,8 +111,8 @@ export default function DashboardPage() {
       <section className="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
         <AttendanceTrendChart data={trendData} loading={loading} />
         <div className="space-y-6">
-          <MonthlySummaryChart data={mockMonthlyAttendance} />
-          <DepartmentChart data={mockDepartmentBreakdown} />
+          <MonthlySummaryChart data={monthlyData} />
+          <DepartmentChart data={departmentData} />
         </div>
       </section>
     </div>

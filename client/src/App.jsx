@@ -10,7 +10,6 @@ import AttendancePage from './pages/admin/AttendancePage';
 import ReportsPage from './pages/admin/ReportsPage';
 import QrGeneratorPage from './pages/admin/QrGeneratorPage';
 import LeaveManagementPage from './pages/admin/LeaveManagementPage';
-import ScannerPage from './pages/employee/ScannerPage';
 import AttendanceHistoryPage from './pages/employee/AttendanceHistoryPage';
 import ProfilePage from './pages/employee/ProfilePage';
 import EmployeeLeavePage from './pages/employee/LeavePage';
@@ -46,7 +45,7 @@ export default function App() {
           path="/home"
           element={
             <Navigate
-              to={user?.role === 'admin' ? '/admin/dashboard' : '/employee/scan-qr'}
+              to={user?.role === 'admin' ? '/admin/dashboard' : '/employee/my-attendance'}
               replace
             />
           }
@@ -105,7 +104,7 @@ export default function App() {
           path="/employee/scan-qr"
           element={
             <ProtectedRoute allowedRoles={['employee']}>
-              <ScannerPage />
+              <Navigate to="/employee/my-attendance" replace />
             </ProtectedRoute>
           }
         />
