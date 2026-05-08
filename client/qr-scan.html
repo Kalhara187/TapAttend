@@ -62,9 +62,11 @@
     </div>
   </div>
 
-  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-  <script>
+  <script type="module">
+    import axios from 'axios';
+    import { Html5Qrcode } from 'html5-qrcode';
+
+    const API_BASE_URL = 'http://localhost:5000/api';
     const reader = document.getElementById('reader');
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
@@ -106,7 +108,7 @@
       // Try extract employeeId if available
       try{ const p = JSON.parse(decodedText); if(p.employeeId) payload.employeeId = p.employeeId; }catch(e){}
 
-      axios.post('/api/attendance/scan', payload, { headers: { Authorization: 'Bearer ' + token } })
+      axios.post(`${API_BASE_URL}/attendance/scan`, payload, { headers: { Authorization: 'Bearer ' + token } })
         .then(res => {
           showAlert(res.data?.message || 'Attendance recorded', 'success');
         })
