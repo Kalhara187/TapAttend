@@ -93,20 +93,20 @@ INSERT IGNORE INTO departments (name) VALUES
 
 -- Seed demo admin user (password: admin123)
 INSERT IGNORE INTO users (id, username, name, email, password, role) VALUES
-  (1, 'admin', 'Admin User', 'admin@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'admin');
+  (1, 'admin', 'Admin User', 'admin@smartattend.com', '$2b$10$CsroTq5qW3v2IE1jZDyAgOelDhIikOlbsyzFTg69585wl.zx5w28y', 'admin');
 
 INSERT IGNORE INTO users (id, username, name, email, password, role) VALUES
-  (2, 'john', 'John Doe', 'john@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (3, 'jane', 'Jane Smith', 'jane@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (4, 'bob', 'Bob Johnson', 'bob@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (5, 'alice', 'Alice Brown', 'alice@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (6, 'charlie', 'Charlie Davis', 'charlie@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (7, 'diana', 'Diana Evans', 'diana@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (8, 'eve', 'Eve Foster', 'eve@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (9, 'frank', 'Frank Green', 'frank@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (10, 'grace', 'Grace Hill', 'grace@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (11, 'henry', 'Henry Irving', 'henry@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee'),
-  (12, 'ivy', 'Ivy Jones', 'ivy@smartattend.com', '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG', 'employee');
+  (2, 'john', 'John Doe', 'john@smartattend.com', '$2b$10$CsroTq5qW3v2IE1jZDyAgOelDhIikOlbsyzFTg69585wl.zx5w28y', 'employee'),
+  (3, 'jane', 'Jane Smith', 'jane@smartattend.com', '$2b$10$CsroTq5qW3v2IE1jZDyAgOelDhIikOlbsyzFTg69585wl.zx5w28y', 'employee'),
+  (4, 'bob', 'Bob Johnson', 'bob@smartattend.com', '$2b$10$CsroTq5qW3v2IE1jZDyAgOelDhIikOlbsyzFTg69585wl.zx5w28y', 'employee'),
+  (5, 'alice', 'Alice Brown', 'alice@smartattend.com', '$2b$10$CsroTq5qW3v2IE1jZDyAgOelDhIikOlbsyzFTg69585wl.zx5w28y', 'employee'),
+  (6, 'charlie', 'Charlie Davis', 'charlie@smartattend.com', '$2b$10$CsroTq5qW3v2IE1jZDyAgOelDhIikOlbsyzFTg69585wl.zx5w28y', 'employee'),
+  (7, 'diana', 'Diana Evans', 'diana@smartattend.com', '$2b$10$CsroTq5qW3v2IE1jZDyAgOelDhIikOlbsyzFTg69585wl.zx5w28y', 'employee'),
+  (8, 'eve', 'Eve Foster', 'eve@smartattend.com', '$2b$10$CsroTq5qW3v2IE1jZDyAgOelDhIikOlbsyzFTg69585wl.zx5w28y', 'employee'),
+  (9, 'frank', 'Frank Green', 'frank@smartattend.com', '$2b$10$CsroTq5qW3v2IE1jZDyAgOelDhIikOlbsyzFTg69585wl.zx5w28y', 'employee'),
+  (10, 'grace', 'Grace Hill', 'grace@smartattend.com', '$2b$10$CsroTq5qW3v2IE1jZDyAgOelDhIikOlbsyzFTg69585wl.zx5w28y', 'employee'),
+  (11, 'henry', 'Henry Irving', 'henry@smartattend.com', '$2b$10$CsroTq5qW3v2IE1jZDyAgOelDhIikOlbsyzFTg69585wl.zx5w28y', 'employee'),
+  (12, 'ivy', 'Ivy Jones', 'ivy@smartattend.com', '$2b$10$CsroTq5qW3v2IE1jZDyAgOelDhIikOlbsyzFTg69585wl.zx5w28y', 'employee');
 
 -- Seed demo attendance data (last 30 days)
 -- This creates realistic attendance patterns for demo purposes

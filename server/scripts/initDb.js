@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const ADMIN_HASH = '$2a$10$N9qo8uLOickgx2ZMRZoMy.MqrqQzBZN0UfGNEKjN3XqQ6Rzv1eKqG';
+const ADMIN_HASH = '$2b$10$CsroTq5qW3v2IE1jZDyAgOelDhIikOlbsyzFTg69585wl.zx5w28y';
 const DB_HOST = process.env.DB_HOST || 'localhost';
 const DB_USER = process.env.DB_USER || 'root';
 const DB_PASSWORD = process.env.DB_PASSWORD || '';
@@ -161,6 +161,10 @@ async function main() {
   await db.query(
     'INSERT IGNORE INTO users (id, username, employee_id, name, email, password, department, role, account_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [1, 'admin', null, 'Admin User', 'admin@smartattend.com', ADMIN_HASH, 'Operations', 'admin', 'Active']
+  );
+  await db.query(
+    "UPDATE users SET username = 'admin', password = ? WHERE email = 'admin@smartattend.com' OR id = 1",
+    [ADMIN_HASH]
   );
 
   const employees = [
