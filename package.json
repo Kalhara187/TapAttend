@@ -1,0 +1,20 @@
+{
+  "name": "smartattend",
+  "version": "1.0.0",
+  "description": "SmartAttend - QR-Based Employee Attendance System",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npm run dev:all",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:portal\" \"npm run dev:scanner\"",
+    "dev:backend": "cd backend-server && npm run dev",
+    "dev:portal": "cd admin-employee-portal && npm run dev",
+    "dev:scanner": "cd qr-scanner-site && npm run dev",
+    "install:all": "npm install && cd backend-server && npm install && cd ../admin-employee-portal && npm install && cd ../qr-scanner-site && npm install",
+    "build:all": "cd backend-server && npm run build && cd ../admin-employee-portal && npm run build && cd ../qr-scanner-site && npm run build",
+    "setup": "npm run install:all && cd backend-server && npm run initdb"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
