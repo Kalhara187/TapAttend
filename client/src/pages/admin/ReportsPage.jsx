@@ -1,13 +1,51 @@
+import { useEffect, useState } from 'react';
 import { HiArrowDownTray } from 'react-icons/hi2';
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { mockMonthlyAttendance, mockReportHighlights } from '../../data/mockData';
+import { reportApi } from '../../services/api';
 
 export default function ReportsPage() {
-  const chartData = mockMonthlyAttendance.map((item) => ({
-    month: new Date(`${item.month}-01`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-    present: item.present,
-    late: item.late,
-    absent: item.absent,
+  const [loading, setLoading] = useState(true);
+  const [monthlyData, setMonthlyData] = useState([]);
+  const [highlights, setHighlights] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const load = async () => {
+      try {
+        const [monthlyRes, summaryRes] = await Promise.allSettled([
+          reportApi.monthly(),
+          reportApi.summary(),
+        ]);
+
+        if (!mounted) return;
+
+        if (monthlyRes.status === 'fulfilled' && monthlyRes.value.data?.success) {
+          setMonthlyData(Array.isArray(monthlyRes.value.data.data) ? monthlyRes.value.data.data : []);
+        }
+
+        if (summaryRes.status === 'fulfilled' && summaryRes.value.data?.success) {
+          const data = summaryRes.value.data.data;
+          setHighlights(Array.isArray(data) ? data : []);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    load();
+    const intervalId = setInterval(load, 30000);
+    return () => {
+      mounted = false;
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  const chartData = monthlyData.map((item) => ({
+    month: item.month ? new Date(`${item.month}-01`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A',
+    present: item.present || 0,
+    late: item.late || 0,
+    absent: item.absent || 0,
   }));
 
   return (
@@ -25,16 +63,20 @@ export default function ReportsPage() {
       </div>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {mockReportHighlights.map((item) => (
-          <div key={item.label} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/5">
-            <p className="text-sm font-medium text-slate-500">{item.label}</p>
-            <p className="mt-2 text-3xl font-black tracking-tight text-slate-900">{item.value}</p>
+        {loading && <p className="text-sm text-slate-500">Loading reports...</p>}
+        {!loading && highlights.length === 0 && <p className="text-sm text-slate-500">No report data available</p>}
+        {highlights.map((item) => (
+          <div key={item.label || item.id} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-lg shadow-slate-900/5">
+            <p className="text-sm font-medium text-slate-500">{item.label || 'Metric'}</p>
+            <p className="mt-2 text-3xl font-black tracking-tight text-slate-900">{item.value || '-'}</p>
           </div>
         ))}
       </section>
 
       <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-xl shadow-slate-900/5">
         <h3 className="mb-4 text-lg font-bold text-slate-900">Monthly trend</h3>
+        {loading && <p className="text-sm text-slate-500">Loading chart...</p>}
+        {!loading && chartData.length === 0 && <p className="text-sm text-slate-500">No monthly data available</p>}
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} barCategoryGap="18%">

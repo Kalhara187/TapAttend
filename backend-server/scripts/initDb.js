@@ -167,19 +167,12 @@ async function main() {
     [ADMIN_HASH]
   );
 
-  const employees = [
-    [2, 'John Doe', 'john@smartattend.com', 'john'],
-    [3, 'Jane Smith', 'jane@smartattend.com', 'jane'],
-    [4, 'Bob Johnson', 'bob@smartattend.com', 'bob'],
-    [5, 'Alice Brown', 'alice@smartattend.com', 'alice'],
-  ];
-
-  for (const [id, name, email, username] of employees) {
-    await db.query(
-      'INSERT IGNORE INTO users (id, username, employee_id, name, email, password, department, role, account_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [id, username, `EMP-${String(id).padStart(4, '0')}`, name, email, ADMIN_HASH, 'Operations', 'employee', 'Active']
-    );
-  }
+  await db.query(
+    "DELETE FROM users WHERE role = 'employee' AND email IN ('john@smartattend.com', 'jane@smartattend.com', 'bob@smartattend.com', 'alice@smartattend.com', 'charlie@smartattend.com', 'diana@smartattend.com', 'eve@smartattend.com', 'frank@smartattend.com', 'grace@smartattend.com', 'henry@smartattend.com', 'ivy@smartattend.com')"
+  );
+  await db.query(
+    "DELETE FROM users WHERE role = 'employee' AND (email LIKE 'tempemployee%@example.com' OR email LIKE 'testuser%@example.com' OR email LIKE 'emp%@smartattend.com' OR email LIKE 'nimal%@smartattend.com' OR username LIKE 'tempemployee%' OR username LIKE 'testuser%' OR username LIKE 'emp%' OR username LIKE 'nimal%')"
+  );
 
   const [employeeRows] = await db.query(
     "SELECT id FROM users WHERE role = 'employee' ORDER BY id ASC"

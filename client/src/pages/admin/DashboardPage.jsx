@@ -6,19 +6,17 @@ import AttendanceTrendChart from '../../components/dashboard/AttendanceTrendChar
 import MonthlySummaryChart from '../../components/dashboard/MonthlySummaryChart';
 import DepartmentChart from '../../components/dashboard/DepartmentChart';
 import { adminApi } from '../../services/api';
-import {
-  mockAttendanceTrends,
-  mockDepartmentBreakdown,
-  mockMonthlyAttendance,
-  mockSummary,
-} from '../../data/mockData';
-
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
-  const [summary, setSummary] = useState(mockSummary);
-  const [trendData, setTrendData] = useState(mockAttendanceTrends);
-  const [monthlyData, setMonthlyData] = useState(mockMonthlyAttendance);
-  const [departmentData, setDepartmentData] = useState(mockDepartmentBreakdown);
+  const [summary, setSummary] = useState({
+    totalEmployees: 0,
+    presentToday: 0,
+    lateEmployees: 0,
+    absentEmployees: 0,
+  });
+  const [trendData, setTrendData] = useState([]);
+  const [monthlyData, setMonthlyData] = useState([]);
+  const [departmentData, setDepartmentData] = useState([]);
 
   useEffect(() => {
     let mounted = true;
@@ -35,18 +33,18 @@ export default function DashboardPage() {
         if (summaryResponse.status === 'fulfilled' && summaryResponse.value.data?.success) {
           const summaryData = summaryResponse.value.data.data;
           setSummary({
-            totalEmployees: summaryData?.totalEmployees ?? mockSummary.totalEmployees,
-            presentToday: summaryData?.presentToday ?? mockSummary.presentToday,
-            lateEmployees: summaryData?.lateToday ?? mockSummary.lateEmployees,
-            absentEmployees: summaryData?.absentToday ?? mockSummary.absentEmployees,
+            totalEmployees: summaryData?.totalEmployees || 0,
+            presentToday: summaryData?.presentToday || 0,
+            lateEmployees: summaryData?.lateToday || 0,
+            absentEmployees: summaryData?.absentToday || 0,
           });
         }
 
         if (trendsResponse.status === 'fulfilled' && trendsResponse.value.data?.success) {
           const trendPayload = trendsResponse.value.data.data;
-          setTrendData(trendPayload?.dailyTrends || mockAttendanceTrends);
-          setMonthlyData(trendPayload?.monthlySummary || mockMonthlyAttendance);
-          setDepartmentData(trendPayload?.departmentData || mockDepartmentBreakdown);
+          setTrendData(trendPayload?.dailyTrends || []);
+          setMonthlyData(trendPayload?.monthlySummary || []);
+          setDepartmentData(trendPayload?.departmentData || []);
         }
       } finally {
         if (mounted) setLoading(false);
