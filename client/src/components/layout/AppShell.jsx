@@ -34,7 +34,7 @@ export default function AppShell() {
 
   return (
     <div className="page-surface min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-slate-200/70 bg-white/85 p-5 shadow-2xl shadow-slate-900/5 backdrop-blur-xl lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col border-r border-slate-200/70 bg-white/85 p-5 shadow-2xl shadow-slate-900/5 backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-900/90 lg:flex">
         <button
           type="button"
           className="mb-8 flex items-center gap-3 text-left"
@@ -44,16 +44,16 @@ export default function AppShell() {
             SA
           </div>
           <div>
-            <p className="text-lg font-extrabold tracking-tight text-slate-900">SmartAttend</p>
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-slate-500">Workforce OS</p>
+            <p className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-slate-100">SmartAttend</p>
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Workforce OS</p>
           </div>
         </button>
 
-        <div className="mb-5 rounded-3xl bg-slate-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Signed in as</p>
-          <p className="mt-2 text-sm font-bold text-slate-900">{user?.name}</p>
-          <p className="text-xs text-slate-500">{user?.email}</p>
-          <div className="mt-4 inline-flex rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700">
+        <div className="mb-5 rounded-3xl bg-slate-50 p-4 dark:bg-slate-800/50">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Signed in as</p>
+          <p className="mt-2 text-sm font-bold text-slate-900 dark:text-slate-200">{user?.name}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</p>
+          <div className="mt-4 inline-flex rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
             {user?.role === 'admin' ? 'Administrator' : 'Employee'}
           </div>
         </div>
@@ -68,8 +68,8 @@ export default function AppShell() {
                 className={({ isActive }) =>
                   `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                     isActive
-                      ? 'bg-teal-600 text-white shadow-lg shadow-teal-600/20'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-teal-600 text-white shadow-lg shadow-teal-600/20 dark:bg-teal-600 dark:text-white'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
                   }`
                 }
               >
@@ -80,24 +80,24 @@ export default function AppShell() {
           })}
         </nav>
 
-        <div className="mt-6 rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 p-4 text-white shadow-lg shadow-slate-900/20">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-300">Today</p>
-          <p className="mt-2 text-sm text-slate-100">{new Date().toLocaleDateString()}</p>
-          <p className="mt-1 text-xs text-slate-400">Attendance operations are live.</p>
+        <div className="mt-6 rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 p-4 text-white shadow-lg shadow-slate-900/20 dark:from-slate-800 dark:to-slate-700">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-300 dark:text-slate-400">Today</p>
+          <p className="mt-2 text-sm text-slate-100 dark:text-slate-200">{new Date().toLocaleDateString()}</p>
+          <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Attendance operations are live.</p>
         </div>
 
         <div className="mt-4 flex items-center gap-2">
           <button
             type="button"
             onClick={toggleTheme}
-            className="flex-1 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 transition hover:border-teal-200 hover:text-teal-700"
+            className="flex-1 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 transition hover:border-teal-200 hover:text-teal-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-teal-500 dark:hover:text-teal-300"
           >
             {theme === 'light' ? 'Dark mode' : 'Light mode'}
           </button>
           <button
             type="button"
             onClick={handleLogout}
-            className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 transition hover:bg-red-100"
+            className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 transition hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
             aria-label="Logout"
           >
             <HiOutlineArrowRightOnRectangle className="h-5 w-5" />
@@ -106,32 +106,32 @@ export default function AppShell() {
       </aside>
 
       <div className="min-h-screen lg:pl-72">
-        <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/75 backdrop-blur-xl">
+        <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/75 backdrop-blur-xl dark:border-slate-700/50 dark:bg-slate-900/80">
           <div className="mx-auto flex max-w-[1600px] items-center gap-3 px-4 py-4 md:px-6 lg:px-8">
             <button
               type="button"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm lg:hidden"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 lg:hidden"
               onClick={() => setMobileOpen(true)}
             >
               <HiBars3 className="h-5 w-5" />
             </button>
 
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-700">SmartAttend</p>
-              <h1 className="truncate text-xl font-extrabold tracking-tight text-slate-900 md:text-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-700 dark:text-teal-400">SmartAttend</p>
+              <h1 className="truncate text-xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 md:text-2xl">
                 {pageTitle}
               </h1>
             </div>
 
             <div className="hidden items-center gap-4 md:flex">
               <div className="text-right">
-                <p className="text-sm font-semibold text-slate-900">{user?.name}</p>
-                <p className="text-xs text-slate-500">{user?.department || 'SmartAttend team'}</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-200">{user?.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{user?.department || 'SmartAttend team'}</p>
               </div>
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-teal-200"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-teal-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-teal-500"
                 aria-label="Toggle theme"
               >
                 {theme === 'light' ? <HiMiniMoon className="h-5 w-5" /> : <HiMiniSun className="h-5 w-5" />}
@@ -139,7 +139,7 @@ export default function AppShell() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-600/20 transition hover:shadow-xl hover:shadow-teal-600/25"
+                className="rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-600/20 transition hover:shadow-xl hover:shadow-teal-600/25 dark:from-teal-600 dark:to-emerald-600 dark:shadow-teal-900/30 dark:hover:shadow-teal-900/40"
               >
                 Logout
               </button>
@@ -171,7 +171,7 @@ export default function AppShell() {
               onClick={() => setMobileOpen(false)}
             />
             <motion.aside
-              className="fixed inset-y-0 left-0 z-50 w-[86vw] max-w-sm border-r border-slate-200 bg-white p-5 shadow-2xl lg:hidden"
+              className="fixed inset-y-0 left-0 z-50 w-[86vw] max-w-sm border-r border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700/50 dark:bg-slate-900/95 lg:hidden"
               initial={{ x: -320 }}
               animate={{ x: 0 }}
               exit={{ x: -320 }}
@@ -183,23 +183,23 @@ export default function AppShell() {
                     SA
                   </div>
                   <div>
-                    <p className="font-extrabold text-slate-900">SmartAttend</p>
-                    <p className="text-xs text-slate-500">Workforce OS</p>
+                    <p className="font-extrabold text-slate-900 dark:text-slate-100">SmartAttend</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Workforce OS</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setMobileOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-700"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
                 >
                   <HiXMark className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="mb-5 rounded-3xl bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Signed in as</p>
-                <p className="mt-2 text-sm font-bold text-slate-900">{user?.name}</p>
-                <p className="text-xs text-slate-500">{user?.email}</p>
+              <div className="mb-5 rounded-3xl bg-slate-50 p-4 dark:bg-slate-800/50">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Signed in as</p>
+                <p className="mt-2 text-sm font-bold text-slate-900 dark:text-slate-200">{user?.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</p>
               </div>
 
               <nav className="space-y-1">
@@ -212,8 +212,8 @@ export default function AppShell() {
                       className={({ isActive }) =>
                         `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                           isActive
-                            ? 'bg-teal-600 text-white'
-                            : 'text-slate-600 hover:bg-slate-100'
+                            ? 'bg-teal-600 text-white dark:bg-teal-600 dark:text-white'
+                            : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
                         }`
                       }
                     >
