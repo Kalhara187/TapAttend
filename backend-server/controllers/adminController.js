@@ -211,19 +211,22 @@ export const createEmployee = async (req, res, next) => {
   const connection = await pool.getConnection();
 
   try {
+
     const {
       fullName,
       email,
       department,
+      role = 'employee',
       username,
       password,
       autoGeneratePassword = true,
     } = req.body;
-
     if (!fullName || !email || !department) {
       throw createError('Full name, email and department are required', 400);
     }
 
+    const validRoles = ['admin', 'employee'];
+    const finalRole = validRoles.includes(role) ? role : 'employee';
     const [existingEmail] = await connection.execute('SELECT id FROM users WHERE email = ? LIMIT 1', [email]);
     if (existingEmail.length > 0) {
       throw createError('Email already registered', 409);
@@ -241,8 +244,8 @@ export const createEmployee = async (req, res, next) => {
 
     const [result] = await connection.execute(
       `INSERT INTO users (username, name, email, password, department, role, account_status)
-       VALUES (?, ?, ?, ?, ?, 'employee', 'Active')`,
-      [finalUsername, fullName, email, hashedPassword, department]
+       VALUES (?, ?, ?, ?, ?, ?, 'Active')`,
+      [finalUsername, fullName, email, hashedPassword, department, finalRole]
     );
 
     const employeeId = toEmployeeCode(result.insertId);
@@ -255,7 +258,7 @@ export const createEmployee = async (req, res, next) => {
       name: fullName,
       email,
       department,
-      role: 'employee',
+      role: finalRole,
       token: qrToken,
       generatedAt: now.toISOString(),
       expiresAt: expiresAt.toISOString(),
@@ -281,8 +284,8 @@ export const createEmployee = async (req, res, next) => {
         generated_at,
         expires_at,
         created_by
-      ) VALUES (?, ?, ?, ?, ?, 'employee', 'Check-In', ?, ?, 'active', ?, ?, ?)`,
-      [employeeId, fullName, email, department, department, qrToken, qrData, now, expiresAt, req.user.id]
+      ) VALUES (?, ?, ?, ?, ?, ?, 'Check-In', ?, ?, 'active', ?, ?, ?)`,
+      [employeeId, fullName, email, department, department, finalRole, qrToken, qrData, now, expiresAt, req.user.id]
     );
 
     await connection.commit();
@@ -298,7 +301,7 @@ export const createEmployee = async (req, res, next) => {
         fullName,
         email,
         department,
-        role: 'employee',
+        role: finalRole,
         accountStatus: 'Active',
         registrationDate: now.toISOString(),
         qrToken,

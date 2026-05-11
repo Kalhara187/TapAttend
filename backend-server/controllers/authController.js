@@ -42,6 +42,8 @@ async function createUniqueUsername(connection, preferredUsername, fullName) {
 export const register = async (req, res, next) => {
   try {
     const { name, email, password, role, department, username } = req.body;
+  // Employee account creation is only allowed through the admin panel
+  throw createError('Employee accounts are created only by admins. Please contact your administrator.', 403);
 
     // Validation
     if (!name || !email || !password) {

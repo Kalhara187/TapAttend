@@ -211,10 +211,12 @@ export const createEmployee = async (req, res, next) => {
   const connection = await pool.getConnection();
 
   try {
+
     const {
       fullName,
       email,
       department,
+      role = 'employee',
       username,
       password,
       autoGeneratePassword = true,
@@ -224,6 +226,8 @@ export const createEmployee = async (req, res, next) => {
       throw createError('Full name, email and department are required', 400);
     }
 
+    const validRoles = ['admin', 'employee'];
+    const finalRole = validRoles.includes(role) ? role : 'employee';
     const [existingEmail] = await connection.execute('SELECT id FROM users WHERE email = ? LIMIT 1', [email]);
     if (existingEmail.length > 0) {
       throw createError('Email already registered', 409);
@@ -241,8 +245,8 @@ export const createEmployee = async (req, res, next) => {
 
     const [result] = await connection.execute(
       `INSERT INTO users (username, name, email, password, department, role, account_status)
-       VALUES (?, ?, ?, ?, ?, 'employee', 'Active')`,
-      [finalUsername, fullName, email, hashedPassword, department]
+       VALUES (?, ?, ?, ?, ?, ?, 'Active')`,
+      [finalUsername, fullName, email, hashedPassword, department, finalRole]
     );
 
     const employeeId = toEmployeeCode(result.insertId);
@@ -262,7 +266,7 @@ export const createEmployee = async (req, res, next) => {
     });
 
     await connection.execute(
-      'UPDATE users SET employee_id = ?, qr_token = ? WHERE id = ?',
+            role: finalRole,
       [employeeId, qrToken, result.insertId]
     );
 
