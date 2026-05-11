@@ -6,7 +6,17 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export default function QRScanner() {
   const [scanner, setScanner] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('smartattend_scanner_token') || '');
+  const [token, setToken] = useState(() => {
+    // Try to get token from scanner-specific storage first
+    let savedToken = localStorage.getItem('smartattend_scanner_token');
+    if (savedToken) return savedToken;
+    
+    // Fall back to main app token
+    const mainAppToken = localStorage.getItem('smartattend_token');
+    if (mainAppToken) return mainAppToken;
+    
+    return '';
+  });
   const [cameraStarted, setCameraStarted] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [lastScan, setLastScan] = useState('No scans yet.');
@@ -14,6 +24,7 @@ export default function QRScanner() {
   const [torchOn, setTorchOn] = useState(false);
   const [fileInput, setFileInput] = useState(null);
   const [scanCount, setScanCount] = useState(0);
+  const [user, setUser] = useState(null);
 
   const showAlert = (message, type = 'success') => {
     const id = Date.now();
@@ -75,11 +86,6 @@ export default function QRScanner() {
       updateLastScan(decodedText);
     }
 
-    if (!token.trim()) {
-      showAlert('Missing JWT token. Paste it in the Authorization box.', 'error');
-      return;
-    }
-
     handleScan(decodedText);
   };
 
@@ -89,6 +95,18 @@ export default function QRScanner() {
 
   const handleScan = async (qrData) => {
     if (loading) return;
+    
+    if (!token.trim()) {
+      showAlert('❌ Token required. Please log in to the employee portal first, or paste your JWT token.', 'error');
+      updateLastScan(`ERROR - ${new Date().toLocaleTimeString()}\nMissing or invalid JWT token`);
+      return;
+    }
+
+    if (!user) {
+      showAlert('❌ Token validation failed. Click "Verify Token" or log in again.', 'error');
+      updateLastScan(`ERROR - ${new Date().toLocaleTimeString()}\nToken validation failed`);
+      return;
+    }
     
     setLoading(true);
     try {
@@ -113,7 +131,20 @@ export default function QRScanner() {
       // Update last scan with response details
       updateLastScan(`SUCCESS - ${new Date().toLocaleTimeString()}\n${msg}\nType: ${response.data?.type || 'unknown'}`);
     } catch (error) {
-      const msg = error?.response?.data?.message || error.message || 'Scan failed';
+      let msg = 'Scan failed';
+      
+      if (error.response?.status === 401) {
+        msg = 'Unauthorized: Token expired or invalid';
+      } else if (error.response?.status === 403) {
+        msg = 'Access denied: Only employees can scan attendance';
+      } else if (error.response?.status === 400) {
+        msg = error.response.data?.message || 'Invalid QR code or code expired';
+      } else if (error.response?.data?.message) {
+        msg = error.response.data.message;
+      } else {
+        msg = error.message || 'Scan failed';
+      }
+      
       showAlert(`✗ ${msg}`, 'error');
       updateLastScan(`ERROR - ${new Date().toLocaleTimeString()}\n${msg}`);
     } finally {
@@ -126,7 +157,12 @@ export default function QRScanner() {
     if (!file) return;
 
     if (!token.trim()) {
-      showAlert('Missing JWT token. Paste it in the Authorization box.', 'error');
+      showAlert('❌ Token required. Please log in to the employee portal first, or paste your JWT token.', 'error');
+      return;
+    }
+
+    if (!user) {
+      showAlert('❌ Token validation failed. Click "Verify Token" or log in again.', 'error');
       return;
     }
 
@@ -190,8 +226,37 @@ export default function QRScanner() {
   useEffect(() => {
     if (token) {
       localStorage.setItem('smartattend_scanner_token', token);
+      // Verify token is valid by fetching user info
+      verifyToken();
     }
   }, [token]);
+
+  const verifyToken = async () => {
+    if (!token.trim()) {
+      setUser(null);
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${API_BASE_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.data?.user) {
+        setUser(response.data.user);
+        showAlert(`✓ Logged in as ${response.data.user.name}`, 'success');
+      }
+    } catch (error) {
+      setUser(null);
+      if (error.response?.status === 401) {
+        showAlert('Token expired. Please log in again.', 'error');
+      } else if (error.response?.status === 403) {
+        showAlert('Access denied. Only employees can use the scanner.', 'error');
+      } else {
+        console.error('Token verification error:', error.message);
+      }
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -209,12 +274,16 @@ export default function QRScanner() {
           <div>
             <h1 className="text-3xl font-bold text-white">QR Attendance Scan</h1>
             <p className="mt-1 text-sm text-slate-400">Fast, mobile-friendly scanner for employees</p>
+            {user && (
+              <p className="mt-2 text-sm text-emerald-400">✓ Logged in as {user.name} ({user.role})</p>
+            )}
           </div>
           <div className="text-right">
             <div className="text-lg font-mono text-slate-300" id="liveClock">
               {new Date().toLocaleTimeString()}
             </div>
             <div className="mt-1 text-sm text-slate-400">Scans: {scanCount}</div>
+            {user && <div className="mt-1 text-sm text-emerald-400">Employee ID: {user.employeeId || user.employee_id || '-'}</div>}
           </div>
         </div>
 
@@ -297,23 +366,46 @@ export default function QRScanner() {
             <div className="rounded-2xl border border-slate-700 bg-slate-900/50 p-4">
               <h3 className="mb-3 font-bold text-white">Authorization</h3>
 
+              {user ? (
+                <div className="mb-3 rounded-lg border border-emerald-600 bg-emerald-900/30 p-3">
+                  <p className="text-xs text-emerald-400">✓ Authenticated</p>
+                  <p className="mt-1 text-sm font-semibold text-emerald-300">{user.name}</p>
+                  <p className="text-xs text-emerald-400">{user.email}</p>
+                </div>
+              ) : (
+                <div className="mb-3 rounded-lg border border-red-600 bg-red-900/30 p-3">
+                  <p className="text-xs text-red-400">✗ Not Authenticated</p>
+                  <p className="mt-1 text-xs text-red-300">Please verify your token</p>
+                </div>
+              )}
+
               <textarea
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
-                placeholder="Paste JWT token here (required)"
+                placeholder="Token auto-loaded from login (or paste JWT token here)"
                 className="mb-3 w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
-                rows={4}
+                rows={3}
               />
 
-              <button
-                onClick={() => {
-                  setToken('');
-                  localStorage.removeItem('smartattend_scanner_token');
-                }}
-                className="w-full rounded-lg border border-slate-600 bg-transparent px-3 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700"
-              >
-                Clear Token
-              </button>
+              <div className="grid gap-2">
+                <button
+                  onClick={verifyToken}
+                  disabled={!token.trim()}
+                  className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ✓ Verify Token
+                </button>
+                <button
+                  onClick={() => {
+                    setToken('');
+                    setUser(null);
+                    localStorage.removeItem('smartattend_scanner_token');
+                  }}
+                  className="w-full rounded-lg border border-slate-600 bg-transparent px-3 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700"
+                >
+                  Clear Token
+                </button>
+              </div>
 
               {/* Last Scan */}
               <hr className="my-4 border-slate-700" />
