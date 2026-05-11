@@ -164,14 +164,14 @@ export default function AppShell() {
         {mobileOpen && (
           <>
             <motion.div
-              className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-[2px] lg:hidden"
+              className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-[2px] lg:hidden dark:bg-slate-950/60"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileOpen(false)}
             />
             <motion.aside
-              className="fixed inset-y-0 left-0 z-50 w-[86vw] max-w-sm border-r border-slate-200 bg-white p-5 shadow-2xl lg:hidden"
+              className="fixed inset-y-0 left-0 z-50 w-[86vw] max-w-sm border-r border-slate-200 bg-white p-5 shadow-2xl dark:border-slate-700/50 dark:bg-slate-900/95 dark:shadow-slate-900/40 lg:hidden"
               initial={{ x: -320 }}
               animate={{ x: 0 }}
               exit={{ x: -320 }}
@@ -183,23 +183,23 @@ export default function AppShell() {
                     SA
                   </div>
                   <div>
-                    <p className="font-extrabold text-slate-900">SmartAttend</p>
-                    <p className="text-xs text-slate-500">Workforce OS</p>
+                    <p className="font-extrabold text-slate-900 dark:text-slate-100">SmartAttend</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Workforce OS</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setMobileOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-700"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                 >
                   <HiXMark className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="mb-5 rounded-3xl bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Signed in as</p>
-                <p className="mt-2 text-sm font-bold text-slate-900">{user?.name}</p>
-                <p className="text-xs text-slate-500">{user?.email}</p>
+              <div className="mb-5 rounded-3xl bg-slate-50 p-4 dark:bg-slate-800/50">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Signed in as</p>
+                <p className="mt-2 text-sm font-bold text-slate-900 dark:text-slate-200">{user?.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</p>
               </div>
 
               <nav className="space-y-1">
@@ -212,8 +212,8 @@ export default function AppShell() {
                       className={({ isActive }) =>
                         `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                           isActive
-                            ? 'bg-teal-600 text-white'
-                            : 'text-slate-600 hover:bg-slate-100'
+                            ? 'bg-teal-600 text-white dark:bg-teal-600 dark:text-white'
+                            : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
                         }`
                       }
                     >

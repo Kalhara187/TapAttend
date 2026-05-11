@@ -165,3 +165,67 @@ export const getQrHistory = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Get employee's active QR code for their profile
+ * GET /api/qr/my-code
+ */
+export const getEmployeeQrCode = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    // Get the user's employee_id
+    const [users] = await pool.execute(
+      'SELECT employee_id FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (!users.length || !users[0].employee_id) {
+      throw createError('Employee ID not found', 404);
+    }
+
+    const employeeId = users[0].employee_id;
+
+    // Get the most recent active Check-In QR code for this employee
+    const [qrRows] = await pool.execute(
+      `SELECT
+        id,
+        employee_id,
+        employee_name,
+        email,
+        department,
+        location,
+        role,
+        attendance_type,
+        code,
+        qr_data,
+        status,
+        generated_at,
+        expires_at,
+        created_by,
+        created_at
+      FROM qr_codes
+      WHERE employee_id = ? AND attendance_type = 'Check-In'
+      ORDER BY generated_at DESC, id DESC
+      LIMIT 1`,
+      [employeeId]
+    );
+
+    if (!qrRows.length) {
+      return res.status(200).json({
+        success: true,
+        qr: null,
+        message: 'No QR code generated yet. Please contact your administrator.',
+      });
+    }
+
+    const qr = normalizeQrRow(qrRows[0]);
+
+    res.status(200).json({
+      success: true,
+      qr,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

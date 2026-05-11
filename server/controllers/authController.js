@@ -241,9 +241,22 @@ export const getMe = async (req, res, next) => {
       throw createError('User not found', 404);
     }
 
+    const user = users[0];
+
     res.status(200).json({
       success: true,
-      user: users[0],
+      user: {
+        id: user.id,
+        username: user.username,
+        employeeId: user.employee_id,
+        name: user.name,
+        email: user.email,
+        department: user.department,
+        role: user.role,
+        accountStatus: user.account_status,
+        createdAt: user.created_at,
+        qrToken: user.qr_token,
+      },
     });
   } catch (error) {
     next(error);
@@ -283,10 +296,23 @@ export const updateMe = async (req, res, next) => {
       [userId]
     );
 
+    const user = users[0];
+
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
-      user: users[0],
+      user: {
+        id: user.id,
+        username: user.username,
+        employeeId: user.employee_id,
+        name: user.name,
+        email: user.email,
+        department: user.department,
+        role: user.role,
+        accountStatus: user.account_status,
+        createdAt: user.created_at,
+        qrToken: user.qr_token,
+      },
     });
   } catch (error) {
     next(error);
