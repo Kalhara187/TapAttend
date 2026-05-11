@@ -13,18 +13,58 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const storedToken = localStorage.getItem('smartattend_token');
+    const storedUser = localStorage.getItem('smartattend_user');
     const storedTheme = localStorage.getItem('smartattend_theme') || 'light';
 
     setTheme(storedTheme);
     document.documentElement.classList.toggle('dark', storedTheme === 'dark');
 
-    if (storedToken) {
-      setToken(storedToken);
+    if (storedToken && storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setToken(storedToken);
+        // Verify user is still valid with API call in background
+        verifyUser(storedToken, parsedUser);
+      } catch (error) {
+        console.error('Failed to parse stored user:', error);
+        logout();
+        setLoading(false);
+      }
+    } else if (storedToken) {
+      // If only token exists (old login), fetch user to restore session
       fetchUser(storedToken);
     } else {
       setLoading(false);
     }
   }, []);
+
+  const verifyUser = async (authToken, userData) => {
+    try {
+      const response = await api.get('/auth/me', {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const data = response.data;
+
+      if (data.success && data.user) {
+        // Update user if any changes from server
+        if (data.user.role !== userData.role || data.user.email !== userData.email) {
+          console.warn('User data mismatch detected, updating from server');
+          setUser(data.user);
+          localStorage.setItem('smartattend_user', JSON.stringify(data.user));
+        }
+      } else {
+        logout();
+      }
+    } catch (error) {
+      console.error('Failed to verify user:', error);
+      if (error.response?.status === 401) {
+        logout();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchUser = async (authToken) => {
     try {
@@ -33,8 +73,9 @@ export function AuthProvider({ children }) {
       });
       const data = response.data;
 
-      if (data.success) {
+      if (data.success && data.user) {
         setUser(data.user);
+        localStorage.setItem('smartattend_user', JSON.stringify(data.user));
       } else {
         logout();
       }
@@ -50,12 +91,14 @@ export function AuthProvider({ children }) {
     setUser(userData);
     setToken(authToken);
     localStorage.setItem('smartattend_token', authToken);
+    localStorage.setItem('smartattend_user', JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('smartattend_token');
+    localStorage.removeItem('smartattend_user');
   };
 
   const toggleTheme = () => {

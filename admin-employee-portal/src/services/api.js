@@ -72,6 +72,7 @@ export const qrApi = {
   generate: (payload) => api.post('/qr/generate', payload),
   create: (payload) => api.post('/qr/generate', payload),
   history: () => api.get('/qr/history'),
+  getMyCode: () => api.get('/qr/my-code'),
 };
 
 export default api;
