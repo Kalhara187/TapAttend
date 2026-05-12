@@ -10,10 +10,27 @@ const api = axios.create({
   timeout: 10000,
 });
 
+// Helper to get token from role-specific storage
+const getAuthToken = () => {
+  const activeRole = sessionStorage.getItem('smartattend_active_role') || localStorage.getItem('smartattend_active_role');
+
+  if (activeRole === 'admin' || activeRole === 'employee') {
+    const activeToken = sessionStorage.getItem(`smartattend_${activeRole}_token`) || localStorage.getItem(`smartattend_${activeRole}_token`);
+    if (activeToken) {
+      return activeToken;
+    }
+  }
+
+  const adminToken = sessionStorage.getItem('smartattend_admin_token') || localStorage.getItem('smartattend_admin_token');
+  const employeeToken = sessionStorage.getItem('smartattend_employee_token') || localStorage.getItem('smartattend_employee_token');
+
+  return adminToken || employeeToken;
+};
+
 // Request interceptor to attach JWT token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('smartattend_token');
+    const token = getAuthToken();
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -29,7 +46,17 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('smartattend_token');
+      // Remove both tokens on 401
+      sessionStorage.removeItem('smartattend_admin_token');
+      sessionStorage.removeItem('smartattend_admin_user');
+      sessionStorage.removeItem('smartattend_employee_token');
+      sessionStorage.removeItem('smartattend_employee_user');
+      sessionStorage.removeItem('smartattend_active_role');
+      localStorage.removeItem('smartattend_admin_token');
+      localStorage.removeItem('smartattend_admin_user');
+      localStorage.removeItem('smartattend_employee_token');
+      localStorage.removeItem('smartattend_employee_user');
+      localStorage.removeItem('smartattend_active_role');
       window.location.href = '/login';
     }
     return Promise.reject(error);

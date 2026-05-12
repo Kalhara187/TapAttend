@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import QRCode from 'react-qr-code';
 
 export default function ProfilePage() {
-  const { login } = useAuth();
+  const { login, token } = useAuth();
   const [avatar, setAvatar] = useState('https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop&crop=faces');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -91,7 +91,6 @@ export default function ProfilePage() {
 
       const updatedUser = response.data?.user;
       if (updatedUser) {
-        const token = localStorage.getItem('smartattend_token');
         if (token) {
           login(
             {

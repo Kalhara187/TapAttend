@@ -8,11 +8,19 @@ export default function QRScanner() {
   const [scanner, setScanner] = useState(null);
   const [token, setToken] = useState(() => {
     // Try to get token from scanner-specific storage first
-    let savedToken = localStorage.getItem('smartattend_scanner_token');
+    let savedToken = sessionStorage.getItem('smartattend_scanner_token') || localStorage.getItem('smartattend_scanner_token');
     if (savedToken) return savedToken;
     
-    // Fall back to main app token
-    const mainAppToken = localStorage.getItem('smartattend_token');
+    // Try role-specific employee token
+    const employeeToken = sessionStorage.getItem('smartattend_employee_token') || localStorage.getItem('smartattend_employee_token');
+    if (employeeToken) return employeeToken;
+    
+    // Try role-specific admin token (for testing)
+    const adminToken = sessionStorage.getItem('smartattend_admin_token') || localStorage.getItem('smartattend_admin_token');
+    if (adminToken) return adminToken;
+    
+    // Fall back to main app token (legacy support)
+    const mainAppToken = sessionStorage.getItem('smartattend_token') || localStorage.getItem('smartattend_token');
     if (mainAppToken) return mainAppToken;
     
     return '';
@@ -225,7 +233,7 @@ export default function QRScanner() {
 
   useEffect(() => {
     if (token) {
-      localStorage.setItem('smartattend_scanner_token', token);
+      sessionStorage.setItem('smartattend_scanner_token', token);
       // Verify token is valid by fetching user info
       verifyToken();
     }
@@ -399,6 +407,7 @@ export default function QRScanner() {
                   onClick={() => {
                     setToken('');
                     setUser(null);
+                    sessionStorage.removeItem('smartattend_scanner_token');
                     localStorage.removeItem('smartattend_scanner_token');
                   }}
                   className="w-full rounded-lg border border-slate-600 bg-transparent px-3 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700"
