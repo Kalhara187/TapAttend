@@ -53,6 +53,19 @@
             <div style="margin-bottom:8px"><strong>Authorization</strong></div>
             <div style="margin-bottom:8px"><input id="tokenInput" class="input" placeholder="Paste JWT token here (required)" /></div>
             <div style="margin-bottom:8px"><button id="clearToken" class="btn secondary">Clear Token</button></div>
+            <div style="margin-bottom:8px">
+              <strong>Upload QR Image</strong>
+              <div style="margin-top:8px">
+                <input id="imageInput" type="file" accept="image/png,image/jpeg,image/jpg" class="input" />
+              </div>
+              <div id="imagePreviewWrap" style="display:none;margin-top:10px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;overflow:hidden;background:rgba(0,0,0,0.25)">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;font-size:12px;color:#bcd3df;border-bottom:1px solid rgba(255,255,255,0.06)">
+                  <span id="imagePreviewName">Selected image</span>
+                  <button id="clearImagePreview" class="btn secondary" style="padding:4px 8px;font-size:12px">Clear preview</button>
+                </div>
+                <img id="imagePreview" alt="Uploaded QR preview" style="display:block;width:100%;max-height:220px;object-fit:contain;background:#000" />
+              </div>
+            </div>
             <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0" />
             <div style="margin-bottom:8px"><strong>Last Scan</strong></div>
             <pre id="lastScan" style="white-space:pre-wrap;font-size:13px;color:#cfe9f5;height:220px;overflow:auto">No scans yet.</pre>
@@ -67,6 +80,7 @@
     import { Html5Qrcode } from 'html5-qrcode';
 
     const API_BASE_URL = 'http://localhost:5000/api';
+    const AUTH_CHANNEL_NAME = 'smartattend-auth';
     const reader = document.getElementById('reader');
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
@@ -74,11 +88,113 @@
     const alerts = document.getElementById('alerts');
     const tokenInput = document.getElementById('tokenInput');
     const clearToken = document.getElementById('clearToken');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreviewWrap = document.getElementById('imagePreviewWrap');
+    const imagePreview = document.getElementById('imagePreview');
+    const imagePreviewName = document.getElementById('imagePreviewName');
+    const clearImagePreview = document.getElementById('clearImagePreview');
     const lastScan = document.getElementById('lastScan');
 
     let html5QrScanner = null;
     let currentCameraId = null;
     let torchOn = false;
+    let authChannel = null;
+    let currentPreviewUrl = '';
+
+    function getStoredToken(role) {
+      return sessionStorage.getItem(`smartattend_${role}_token`) || localStorage.getItem(`smartattend_${role}_token`);
+    }
+
+    function getStoredUser(role) {
+      const userJson = sessionStorage.getItem(`smartattend_${role}_user`) || localStorage.getItem(`smartattend_${role}_user`);
+      if (!userJson) return null;
+
+      try {
+        return JSON.parse(userJson);
+      } catch {
+        return null;
+      }
+    }
+
+    function applyAuthState(role, token, user) {
+      if (!token || !user || role !== 'employee') return false;
+
+      tokenInput.value = token;
+      sessionStorage.setItem('smartattend_scanner_token', token);
+      sessionStorage.setItem('smartattend_employee_token', token);
+      sessionStorage.setItem('smartattend_employee_user', JSON.stringify(user));
+      updateLastScan(`Authenticated as ${user.name || user.email || 'employee'}`);
+      showAlert(`Authenticated as ${user.name || user.email || 'employee'}`, 'success');
+      verifyToken();
+      return true;
+    }
+
+    function requestAuthState() {
+      const directEmployeeToken = getStoredToken('employee');
+      const directEmployeeUser = getStoredUser('employee');
+      if (directEmployeeToken && directEmployeeUser) {
+        applyAuthState('employee', directEmployeeToken, directEmployeeUser);
+        return;
+      }
+
+      const directScannerToken = sessionStorage.getItem('smartattend_scanner_token') || localStorage.getItem('smartattend_scanner_token');
+      if (directScannerToken) {
+        tokenInput.value = directScannerToken;
+        verifyToken(directScannerToken);
+      }
+
+      if (window.opener && !window.opener.closed) {
+        // Allow cross-origin opener windows (different ports/origins)
+        window.opener.postMessage({ type: 'request-auth-state', role: 'employee' }, '*');
+      }
+
+      if (authChannel) {
+        authChannel.postMessage({ type: 'request-auth-state', role: 'employee' });
+      }
+    }
+
+    async function verifyToken(authToken = tokenInput.value.trim()) {
+      const token = String(authToken || '').trim();
+      if (!token) {
+        return null;
+      }
+
+      try {
+        const response = await axios.get(`${API_BASE_URL}/auth/me`, {
+          headers: { Authorization: 'Bearer ' + token },
+        });
+
+        if (response.data?.user) {
+          sessionStorage.setItem('smartattend_scanner_token', token);
+          sessionStorage.setItem('smartattend_employee_token', token);
+          sessionStorage.setItem('smartattend_employee_user', JSON.stringify(response.data.user));
+          tokenInput.value = token;
+          updateLastScan(`Authenticated as ${response.data.user.name || response.data.user.email || 'employee'}`);
+          showAlert(`Authenticated as ${response.data.user.name || response.data.user.email || 'employee'}`, 'success');
+          return response.data.user;
+        }
+
+        showAlert('Token validation failed. Please verify your token.', 'error');
+        return null;
+      } catch (err) {
+        const status = err?.response?.status;
+        if (status === 401) {
+          showAlert('Not Authenticated. Please verify your token.', 'error');
+        } else if (status === 403) {
+          showAlert('Access denied. Only employees can use the scanner.', 'error');
+        } else {
+          showAlert(err?.response?.data?.message || err.message || 'Token validation failed', 'error');
+        }
+        return null;
+      }
+    }
+
+    function handleAuthMessage(event) {
+      const data = event?.data;
+      if (!data || data.type !== 'auth-state') return;
+      if (data.role !== 'employee') return;
+      applyAuthState(data.role, data.token, data.user);
+    }
 
     function showAlert(message, type='success'){
       const el = document.createElement('div');
@@ -89,6 +205,28 @@
     }
 
     function updateLastScan(text){ lastScan.textContent = text; }
+
+    function setPreview(file){
+      if (currentPreviewUrl) {
+        URL.revokeObjectURL(currentPreviewUrl);
+      }
+
+      currentPreviewUrl = URL.createObjectURL(file);
+      imagePreview.src = currentPreviewUrl;
+      imagePreviewName.textContent = file.name || 'Selected image';
+      imagePreviewWrap.style.display = 'block';
+    }
+
+    function clearPreview(){
+      if (currentPreviewUrl) {
+        URL.revokeObjectURL(currentPreviewUrl);
+      }
+      currentPreviewUrl = '';
+      imagePreview.src = '';
+      imagePreviewName.textContent = 'Selected image';
+      imagePreviewWrap.style.display = 'none';
+      if (imageInput) imageInput.value = '';
+    }
 
     function onScanSuccess(decodedText, decodedResult){
       try{
@@ -148,6 +286,57 @@
       }catch(err){ showAlert('Stop error: '+err.message, 'error'); }
     }
 
+    async function handleImageUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      if (!validTypes.includes(file.type)) {
+        showAlert('Please upload a PNG, JPG, or JPEG image.', 'error');
+        clearPreview();
+        return;
+      }
+
+      setPreview(file);
+
+      if (!tokenInput.value.trim()) {
+        showAlert('Missing JWT token. Paste it in the Authorization box.', 'error');
+        return;
+      }
+
+      try {
+        const decodedText = await Html5Qrcode.scanFile(file, true);
+        try {
+          const parsed = JSON.parse(decodedText);
+          updateLastScan(JSON.stringify(parsed, null, 2));
+        } catch {
+          updateLastScan(decodedText);
+        }
+
+        const payload = { qrData: decodedText };
+        try {
+          const p = JSON.parse(decodedText);
+          if (p.employeeId) payload.employeeId = p.employeeId;
+        } catch (e) {}
+
+        const response = await axios.post(`${API_BASE_URL}/attendance/scan`, payload, {
+          headers: { Authorization: 'Bearer ' + tokenInput.value.trim() }
+        });
+
+        showAlert(response.data?.message || 'Attendance recorded', 'success');
+        updateLastScan(`SUCCESS - ${new Date().toLocaleTimeString()}\n${response.data?.message || 'Attendance recorded'}`);
+      } catch (err) {
+        const rawMessage = err?.response?.data?.message || err?.message || 'Failed to read QR code from image';
+        const msg = /not found|decode|qr code/i.test(rawMessage)
+          ? 'No QR code could be detected in the uploaded image.'
+          : rawMessage;
+        showAlert(`✗ ${msg}`, 'error');
+        updateLastScan(`ERROR - ${new Date().toLocaleTimeString()}\nFailed to read image: ${msg}`);
+      } finally {
+        if (imageInput) imageInput.value = '';
+      }
+    }
+
     // Torch toggle (best-effort)
     async function toggleCameraTorch(){
       if(!html5QrScanner || !currentCameraId){ showAlert('Camera not started', 'error'); return; }
@@ -168,6 +357,23 @@
     stopBtn.addEventListener('click', stopCamera);
     toggleTorch.addEventListener('click', toggleCameraTorch);
     clearToken.addEventListener('click', ()=> tokenInput.value = '');
+    imageInput.addEventListener('change', handleImageUpload);
+    clearImagePreview.addEventListener('click', clearPreview);
+
+    if (typeof BroadcastChannel !== 'undefined') {
+      authChannel = new BroadcastChannel(AUTH_CHANNEL_NAME);
+      authChannel.addEventListener('message', handleAuthMessage);
+    }
+
+    window.addEventListener('message', handleAuthMessage);
+
+    requestAuthState();
+
+    window.addEventListener('beforeunload', () => {
+      if (authChannel) {
+        authChannel.close();
+      }
+    });
 
     // Live clock
     function updateClock(){ document.getElementById('liveClock').textContent = new Date().toLocaleString(); }

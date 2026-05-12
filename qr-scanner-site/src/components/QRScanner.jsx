@@ -3,9 +3,12 @@ import axios from 'axios';
 import { Html5Qrcode } from 'html5-qrcode';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const AUTH_CHANNEL_NAME = 'smartattend-auth';
 
 export default function QRScanner() {
   const [scanner, setScanner] = useState(null);
+  const [selectedImagePreview, setSelectedImagePreview] = useState('');
+  const [selectedImageName, setSelectedImageName] = useState('');
   const [token, setToken] = useState(() => {
     // Try to get token from scanner-specific storage first
     let savedToken = sessionStorage.getItem('smartattend_scanner_token') || localStorage.getItem('smartattend_scanner_token');
@@ -33,6 +36,44 @@ export default function QRScanner() {
   const [fileInput, setFileInput] = useState(null);
   const [scanCount, setScanCount] = useState(0);
   const [user, setUser] = useState(null);
+
+  const applyAuthState = (role, authToken, authUser) => {
+    if (role !== 'employee' || !authToken || !authUser) return false;
+
+    setToken(authToken);
+    setUser(authUser);
+    sessionStorage.setItem('smartattend_scanner_token', authToken);
+    sessionStorage.setItem('smartattend_employee_token', authToken);
+    sessionStorage.setItem('smartattend_employee_user', JSON.stringify(authUser));
+    verifyToken(authToken);
+    return true;
+  };
+
+  const requestAuthState = () => {
+    const directEmployeeToken = sessionStorage.getItem('smartattend_employee_token') || localStorage.getItem('smartattend_employee_token');
+    const directEmployeeUserJson = sessionStorage.getItem('smartattend_employee_user') || localStorage.getItem('smartattend_employee_user');
+
+    if (directEmployeeToken && directEmployeeUserJson) {
+      try {
+        const directEmployeeUser = JSON.parse(directEmployeeUserJson);
+        applyAuthState('employee', directEmployeeToken, directEmployeeUser);
+        return;
+      } catch {
+        // fall through to request current session from an open tab
+      }
+    }
+
+    if (window.opener && !window.opener.closed) {
+      // Allow cross-origin opener windows (different ports/origins)
+      window.opener.postMessage({ type: 'request-auth-state', role: 'employee' }, '*');
+    }
+
+    if (typeof BroadcastChannel !== 'undefined') {
+      const channel = new BroadcastChannel(AUTH_CHANNEL_NAME);
+      channel.postMessage({ type: 'request-auth-state', role: 'employee' });
+      channel.close();
+    }
+  };
 
   const showAlert = (message, type = 'success') => {
     const id = Date.now();
@@ -143,6 +184,14 @@ export default function QRScanner() {
       
       if (error.response?.status === 401) {
         msg = 'Unauthorized: Token expired or invalid';
+        // Clear stored tokens and request fresh auth from portal
+        setToken('');
+        setUser(null);
+        sessionStorage.removeItem('smartattend_scanner_token');
+        sessionStorage.removeItem('smartattend_employee_token');
+        localStorage.removeItem('smartattend_scanner_token');
+        localStorage.removeItem('smartattend_employee_token');
+        requestAuthState();
       } else if (error.response?.status === 403) {
         msg = 'Access denied: Only employees can scan attendance';
       } else if (error.response?.status === 400) {
@@ -164,8 +213,29 @@ export default function QRScanner() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      showAlert('Please upload a PNG, JPG, or JPEG image.', 'error');
+      setSelectedImagePreview('');
+      setSelectedImageName('');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setSelectedImagePreview((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return previewUrl;
+    });
+    setSelectedImageName(file.name);
+
     if (!token.trim()) {
       showAlert('❌ Token required. Please log in to the employee portal first, or paste your JWT token.', 'error');
+      if (fileInput) {
+        fileInput.value = '';
+      }
       return;
     }
 
@@ -190,7 +260,10 @@ export default function QRScanner() {
       // Send to backend
       await handleScan(decodedText);
     } catch (error) {
-      const msg = error?.message || 'Failed to read QR code from image';
+      const rawMessage = error?.message || 'Failed to read QR code from image';
+      const msg = /not found|decode|qr code/i.test(rawMessage)
+        ? 'No QR code could be detected in the uploaded image.'
+        : rawMessage;
       showAlert(`✗ ${msg}`, 'error');
       updateLastScan(`ERROR - ${new Date().toLocaleTimeString()}\nFailed to read image: ${msg}`);
     } finally {
@@ -200,6 +273,14 @@ export default function QRScanner() {
         fileInput.value = '';
       }
     }
+  };
+
+  const clearSelectedImage = () => {
+    if (selectedImagePreview) {
+      URL.revokeObjectURL(selectedImagePreview);
+    }
+    setSelectedImagePreview('');
+    setSelectedImageName('');
   };
 
   const toggleTorch = async () => {
@@ -239,6 +320,31 @@ export default function QRScanner() {
     }
   }, [token]);
 
+  useEffect(() => {
+    const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel(AUTH_CHANNEL_NAME) : null;
+
+    const handleAuthMessage = (event) => {
+      const data = event?.data;
+      if (!data || data.type !== 'auth-state') return;
+      applyAuthState(data.role, data.token, data.user);
+    };
+
+    window.addEventListener('message', handleAuthMessage);
+    if (channel) {
+      channel.addEventListener('message', handleAuthMessage);
+    }
+
+    requestAuthState();
+
+    return () => {
+      window.removeEventListener('message', handleAuthMessage);
+      if (channel) {
+        channel.removeEventListener('message', handleAuthMessage);
+        channel.close();
+      }
+    };
+  }, []);
+
   const verifyToken = async () => {
     if (!token.trim()) {
       setUser(null);
@@ -256,9 +362,19 @@ export default function QRScanner() {
       }
     } catch (error) {
       setUser(null);
-      if (error.response?.status === 401) {
+      const status = error.response?.status;
+      if (status === 401) {
         showAlert('Token expired. Please log in again.', 'error');
-      } else if (error.response?.status === 403) {
+        // Clear stored tokens to avoid repeat failures and prompt portal to provide a fresh token
+        setToken('');
+        sessionStorage.removeItem('smartattend_scanner_token');
+        sessionStorage.removeItem('smartattend_employee_token');
+        localStorage.removeItem('smartattend_scanner_token');
+        localStorage.removeItem('smartattend_employee_token');
+        setUser(null);
+        // Ask any open portal tab to send a fresh auth-state
+        requestAuthState();
+      } else if (status === 403) {
         showAlert('Access denied. Only employees can use the scanner.', 'error');
       } else {
         console.error('Token verification error:', error.message);
@@ -337,18 +453,37 @@ export default function QRScanner() {
               <h3 className="mb-3 font-semibold text-white">Or upload a QR image</h3>
               <label className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-slate-600 bg-slate-900/30 px-4 py-6 transition-colors hover:border-cyan-500 hover:bg-slate-900/50">
                 <div className="text-center">
-                  <p className="text-sm font-semibold text-slate-300">📷 Click to upload QR image (PNG/JPG)</p>
+                  <p className="text-sm font-semibold text-slate-300">📷 Click to upload QR image (PNG/JPG/JPEG)</p>
                   <p className="mt-1 text-xs text-slate-500">or drag and drop</p>
                 </div>
                 <input
                   ref={(el) => setFileInput(el)}
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg,image/jpg"
                   onChange={handleImageUpload}
                   disabled={loading}
                   className="hidden"
                 />
               </label>
+              {selectedImagePreview && (
+                <div className="mt-3 overflow-hidden rounded-lg border border-slate-700 bg-slate-950">
+                  <div className="flex items-center justify-between border-b border-slate-800 px-3 py-2 text-xs text-slate-400">
+                    <span>{selectedImageName || 'Selected image'}</span>
+                    <button
+                      type="button"
+                      onClick={clearSelectedImage}
+                      className="text-cyan-400 hover:text-cyan-300"
+                    >
+                      Clear preview
+                    </button>
+                  </div>
+                  <img
+                    src={selectedImagePreview}
+                    alt="Uploaded QR preview"
+                    className="max-h-64 w-full bg-black object-contain"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Alerts */}

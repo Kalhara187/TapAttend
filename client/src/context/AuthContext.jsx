@@ -4,6 +4,7 @@ import api, { authApi } from '../services/api';
 const AuthContext = createContext(null);
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const AUTH_CHANNEL_NAME = 'smartattend-auth';
 
 // Helper functions for role-based storage keys
 const getTokenKey = (role) => `smartattend_${role}_token`;
@@ -93,6 +94,83 @@ export function AuthProvider({ children }) {
     } else {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel(AUTH_CHANNEL_NAME) : null;
+
+    const getActiveSession = () => {
+      const activeRole = sessionStorage.getItem(getActiveRoleKey()) || localStorage.getItem(getActiveRoleKey());
+      const roles = activeRole ? [activeRole, activeRole === 'admin' ? 'employee' : 'admin'] : ['employee', 'admin'];
+
+      for (const role of roles) {
+        const authToken = sessionStorage.getItem(getTokenKey(role)) || localStorage.getItem(getTokenKey(role));
+        const userJson = sessionStorage.getItem(getUserKey(role)) || localStorage.getItem(getUserKey(role));
+
+        if (authToken && userJson) {
+          try {
+            return { role, token: authToken, user: JSON.parse(userJson) };
+          } catch {
+            continue;
+          }
+        }
+      }
+
+      return null;
+    };
+
+    const respondToRequest = (request) => {
+      const data = request?.data;
+
+      if (!data || data.type !== 'request-auth-state') {
+        return;
+      }
+
+      const requestedRole = data.role;
+      const session = getActiveSession();
+
+      if (!session) return;
+
+      if (requestedRole && requestedRole !== 'any' && requestedRole !== session.role) {
+        return;
+      }
+
+      const payload = {
+        type: 'auth-state',
+        role: session.role,
+        token: session.token,
+        user: session.user,
+      };
+
+      if (channel) {
+        channel.postMessage(payload);
+      }
+
+      if (request.source && typeof request.source.postMessage === 'function') {
+        request.source.postMessage(payload, request.origin || window.location.origin);
+      }
+    };
+
+    const onWindowMessage = (event) => {
+      respondToRequest(event);
+    };
+
+    const onChannelMessage = (event) => {
+      respondToRequest(event);
+    };
+
+    window.addEventListener('message', onWindowMessage);
+    if (channel) {
+      channel.addEventListener('message', onChannelMessage);
+    }
+
+    return () => {
+      window.removeEventListener('message', onWindowMessage);
+      if (channel) {
+        channel.removeEventListener('message', onChannelMessage);
+        channel.close();
+      }
+    };
   }, []);
 
   const verifyUser = async (authToken, userData, role = 'admin') => {
