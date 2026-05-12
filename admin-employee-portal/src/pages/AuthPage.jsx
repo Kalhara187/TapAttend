@@ -113,11 +113,28 @@ export default function AuthPage() {
         throw new Error(data.message || 'Something went wrong');
       }
 
-      // Store token
-      if (formData.rememberMe || !isLogin) {
-        localStorage.setItem('smartattend_token', data.token);
-      } else {
-        sessionStorage.setItem('smartattend_token', data.token);
+      // Check if user is switching roles
+      const loggingInRole = data.user.role;
+      const otherRole = loggingInRole === 'admin' ? 'employee' : 'admin';
+      const otherRoleToken = sessionStorage.getItem(`smartattend_${otherRole}_token`) || localStorage.getItem(`smartattend_${otherRole}_token`);
+
+      // If logging in as different role, clear the other role's session
+      if (otherRoleToken) {
+        const shouldProceed = window.confirm(
+          `You are currently logged in as ${otherRole}. ` +
+          `Logging in as ${loggingInRole} will end the ${otherRole} session. Continue?`
+        );
+        
+        if (!shouldProceed) {
+          setLoading(false);
+          return;
+        }
+        
+        // Clear the other role's session
+        sessionStorage.removeItem(`smartattend_${otherRole}_token`);
+        sessionStorage.removeItem(`smartattend_${otherRole}_user`);
+        localStorage.removeItem(`smartattend_${otherRole}_token`);
+        localStorage.removeItem(`smartattend_${otherRole}_user`);
       }
 
       // Update auth context

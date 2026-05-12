@@ -73,7 +73,6 @@ export default function AuthForm({ mode = 'login' }) {
         throw new Error(data.message || 'Authentication failed');
       }
 
-      localStorage.setItem('smartattend_token', data.token);
       login(data.user, data.token);
 
       navigate(data.user.role === 'admin' ? '/admin/dashboard' : '/employee/my-attendance', {
