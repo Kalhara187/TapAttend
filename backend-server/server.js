@@ -34,7 +34,9 @@ app.get('/api/health', (req, res) => {
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+  console.log(`   Local: http://localhost:${PORT}`);
+  console.log(`   Network: http://10.89.26.160:${PORT}`);
 });
 

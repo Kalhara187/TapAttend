@@ -97,5 +97,8 @@ export const shadows = {
   },
 };
 
-export const API_BASE_URL = 'http://10.0.2.2:5000/api';
+// For Android Emulator use: http://10.0.2.2:5000/api
+// For physical phone use: http://10.89.26.160:5000/api
+// Switch based on your testing environment
+export const API_BASE_URL = 'http://10.89.26.160:5000/api';
 export const REQUEST_TIMEOUT = 10000;
