@@ -5,7 +5,7 @@
   "main": "node_modules/expo/AppEntry.js",
   "private": true,
   "scripts": {
-    "start": "set REACT_NATIVE_PACKAGER_HOSTNAME=10.89.26.160&& expo start --lan --clear",
+    "start": "set REACT_NATIVE_PACKAGER_HOSTNAME=10.89.26.160&& expo start --lan --port 19002 --clear",
     "start:tunnel": "expo start --tunnel",
     "android": "expo run:android",
     "ios": "expo run:ios",
