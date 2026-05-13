@@ -1,0 +1,32 @@
+{
+  "name": "smartattend-scanner",
+  "version": "1.0.0",
+  "description": "Mobile QR Attendance Scanner App using React Native and Expo",
+  "main": "node_modules/expo/AppEntry.js",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "eject": "expo eject"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^1.20.1",
+    "@react-navigation/native": "^6.1.7",
+    "@react-navigation/native-stack": "^6.9.12",
+    "axios": "^1.6.0",
+    "expo": "^48.0.0",
+    "expo-av": "^13.2.1",
+    "expo-camera": "^13.3.1",
+    "expo-status-bar": "^1.4.4",
+    "react": "18.2.0",
+    "react-native": "0.71.8",
+    "react-native-safe-area-context": "^4.5.0",
+    "react-native-screens": "^3.22.0"
+  },
+  "devDependencies": {
+    "babel-preset-expo": "^9.0.0"
+  }
+}
+
